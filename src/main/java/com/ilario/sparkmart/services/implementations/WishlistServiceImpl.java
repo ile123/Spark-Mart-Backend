@@ -1,0 +1,47 @@
+package com.ilario.sparkmart.services.implementations;
+
+import com.ilario.sparkmart.models.Wishlist;
+import com.ilario.sparkmart.repositories.IWishlistRepository;
+import com.ilario.sparkmart.services.IWishlistService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+public class WishlistServiceImpl implements IWishlistService {
+
+    private final IWishlistRepository wishlistRepository;
+
+    public WishlistServiceImpl(IWishlistRepository wishlistRepository) {
+        this.wishlistRepository = wishlistRepository;
+    }
+
+    @Override
+    public Wishlist getWishList(UUID id) {
+        return wishlistRepository.findById(id).get();
+    }
+
+    @Override
+    public Wishlist getLastWishlist() {
+        var wishlists = wishlistRepository
+                .findAll()
+                .stream()
+                .sorted(Comparator.comparing(Wishlist::getCreatedAt))
+                .collect(Collectors.toList());
+        return wishlists.get(wishlists.size() - 1);
+    }
+
+    @Override
+    public List<Wishlist> getAllWishlists() {
+        return wishlistRepository.findAll();
+    }
+
+    @Override
+    public void saveWishList(Wishlist wishlist) {
+        wishlistRepository.save(wishlist);
+    }
+}
