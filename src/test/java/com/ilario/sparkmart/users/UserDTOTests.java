@@ -13,24 +13,13 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class UserDTOTests {
 
     UserMapper mapper = new UserMapper();
-    @Test
-    void CreateUserDTOTest() {
-        var userDTO = new UserDTO();
-        assertThat(userDTO).isInstanceOf(userDTO.getClass());
-    }
 
     @Test
-    void CreateUserDTOTestAndGiveItOneValueTest() {
-        var userDTO = new UserDTO();
-        userDTO.setId(UUID.randomUUID());
-        assertThat(userDTO.getId()).isNotEqualTo(null);
-        assertThat(userDTO.getUsername()).isEqualTo(null);
+    void CreateUserDTOTestAndGiveItValues() {
+        var userDTO = new UserDTO(UUID.randomUUID(), "Temp", "Temp",
+                "Temp", "Temp", "Temp",
+                 UUID.randomUUID(), UUID.randomUUID());
+        assertThat(userDTO.id()).isNotEqualTo(null);
     }
 
-    @Test
-    void ConvertFromUserToUserDTOTest() {
-        var user = new User();
-        var userDTO = mapper.toUserDTO(user);
-        assertThat(userDTO).isInstanceOf(userDTO.getClass());
-    }
 }

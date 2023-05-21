@@ -7,14 +7,13 @@ import com.ilario.sparkmart.repositories.IAddressRepository;
 import com.ilario.sparkmart.services.IAddressService;
 import org.springframework.stereotype.Service;
 import com.ilario.sparkmart.models.Address;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class AddressServiceImpl implements IAddressService {
     private final IAddressRepository addressRepository;
     private AddressMapper addressMapper = new AddressMapper();
@@ -27,7 +26,7 @@ public class AddressServiceImpl implements IAddressService {
     public AddressDTO getAddressById(UUID id) {
         var address = addressRepository.findById(id);
         try {
-            if(!address.isPresent()) {
+            if(address.isEmpty()) {
                 throw new AddressNotFoundException("Address Not Found!");
             }
             return addressMapper.toAddressDTO(address.get());
@@ -40,14 +39,16 @@ public class AddressServiceImpl implements IAddressService {
     @Override
     public List<AddressDTO> getAllAddresses() {
         var addresses = addressRepository.findAll();
-        var addressesDTO = addresses.stream().map(addressMapper::toAddressDTO).collect(Collectors.toList());
-        return addressesDTO;
+        return addresses.stream().map(addressMapper::toAddressDTO).collect(Collectors.toList());
     }
 
     @Override
     public void saveAddress(AddressDTO addressDTO) {
         var address = addressMapper.toAddress(addressDTO);
-        addressRepository.save(address);
+        var existingAddress = addressRepository.findAddressByStreetAddressAndCity(address.getStreetAddress(), address.getCity());
+        if(existingAddress.isEmpty()) {
+            addressRepository.save(address);
+        }
     }
 
     @Override
@@ -55,18 +56,29 @@ public class AddressServiceImpl implements IAddressService {
         var addresses = addressRepository.findAll()
                 .stream()
                 .sorted(Comparator.comparing(Address::getCreatedAt))
-                .collect(Collectors.toList());
+                .toList();
         return addresses.get(addresses.size() - 1);
     }
-
+//prijasnja verzija je imala if gdje se gledala jeli postoji, ako nepostoji onda se stvara prazna adresa, sprema se i vraca se
     @Override
     public Address getAddressByStreetNameAndCity(String streetName, String city) {
-        return addressRepository.findAddressByStreetAddressAndCity(streetName, city);
+        try {
+            var address = addressRepository.findAddressByStreetAddressAndCity(streetName, city);
+            if(address.isEmpty()) {
+                throw new AddressNotFoundException("ERROR: Address not found!");
+            } else {
+                return address.get();
+            }
+        } catch (AddressNotFoundException exception) {
+            System.out.println(exception.getMessage());
+        }
+        return null;
     }
 
     @Override
-    public Optional<Address> findAddressById(UUID id) {
-        return addressRepository.findById(id);
+    public Boolean addressExists(AddressDTO addressDTO) {
+        var existingAddress = addressRepository.findAddressByStreetAddressAndCity(addressDTO.streetAddress(), addressDTO.city());
+        return existingAddress.isPresent();
     }
 
 }

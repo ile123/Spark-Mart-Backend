@@ -1,9 +1,10 @@
 package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.AddressDTO;
+import com.ilario.sparkmart.dto.ChangePasswordDTO;
 import com.ilario.sparkmart.dto.UserDTO;
 import com.ilario.sparkmart.services.implementations.UserServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +15,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-
     private final UserServiceImpl userService;
 
     public UserController(UserServiceImpl userService) {
@@ -22,8 +22,8 @@ public class UserController {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<UserDTO>> GetAllUsers() {
-        var users = userService.getAllUsers();
+    public ResponseEntity<Page<UserDTO>> GetAllUsers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
+        var users = userService.getAllUsers(page, pageSize);
         if(users.isEmpty()) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
@@ -39,14 +39,15 @@ public class UserController {
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
 
-    @PostMapping("")
-    public ResponseEntity<String> SaveUser(@RequestBody UserDTO userDTO) {
-        if(userDTO == null) {
-            return new ResponseEntity<>("ERROR: User could not be saved!", HttpStatus.BAD_REQUEST);
+    @GetMapping("/getUserByEmail/{userEmail}")
+    public ResponseEntity<UserDTO> GetUserByEmail(@PathVariable("userEmail") String email) {
+        if(email.isEmpty() || email.isBlank()) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
-        userService.saveUser(userDTO);
-        return new ResponseEntity<>("User was saved successfully!", HttpStatus.OK);
+        var user = userService.getUserByEmail(email);
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
+
     @PutMapping("/update-user/{userId}")
     public ResponseEntity<String> UpdateUser(@PathVariable("userId") UUID userId, @RequestBody UserDTO userDTO) {
         if(userDTO == null) {
@@ -54,6 +55,16 @@ public class UserController {
         }
         userService.updateUser(userId, userDTO);
         return new ResponseEntity<>("User was changed successfully!", HttpStatus.OK);
+    }
+
+    @PatchMapping("/change-password/{userId}")
+    public ResponseEntity<String> ChangePassword(@PathVariable("userId") UUID userId, @RequestBody ChangePasswordDTO newPassword) {
+        var user = userService.getUserById(userId);
+        if(user == null) {
+            return new ResponseEntity<>("ERROR: User dose not exist!", HttpStatus.BAD_REQUEST);
+        }
+        userService.changeUserPassword(userId, newPassword.newPassword());
+        return new ResponseEntity<>("Change password success!", HttpStatus.OK);
     }
 
     @PutMapping("/change-address/{userId}")

@@ -12,6 +12,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @DataJpaTest
 public class AddressTests {
 
+    AddressMapper addressMapper = new AddressMapper();
+
     @Test
     void CreateAddressTest() {
         var address = new Address();
@@ -34,7 +36,7 @@ public class AddressTests {
         address.setCity("Split");
         address.setPostalCode("21000");
         address.setCountry("Croatia");
-        var addressDTO = AddressMapper.toAddressDTO(address);
-        assertThat(addressDTO.getId()).isEqualTo(address.getId());
+        var addressDTO = addressMapper.toAddressDTO(address);
+        assertThat(addressDTO.id()).isEqualTo(address.getId());
     }
 }

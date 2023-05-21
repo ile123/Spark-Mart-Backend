@@ -6,21 +6,5 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class AddressDTO {
-    @Nullable
-    private UUID id;
-    @Nullable
-    private String streetAddress;
-    @Nullable
-    private String city;
-    @Nullable
-    private String postalCode;
-    @Nullable
-    private String province;
-    @Nullable
-    private String country;
+public record AddressDTO(UUID id, String streetAddress, String city, String postalCode, String province, String country) {
 }
