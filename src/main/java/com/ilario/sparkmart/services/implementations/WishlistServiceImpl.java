@@ -31,7 +31,7 @@ public class WishlistServiceImpl implements IWishlistService {
                 .findAll()
                 .stream()
                 .sorted(Comparator.comparing(Wishlist::getCreatedAt))
-                .collect(Collectors.toList());
+                .toList();
         return wishlists.get(wishlists.size() - 1);
     }
 

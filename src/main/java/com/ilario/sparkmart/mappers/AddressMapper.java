@@ -9,24 +9,18 @@ public class AddressMapper {
 
 
     public AddressDTO toAddressDTO(Address address) {
-        var addressDTO = new AddressDTO();
-        if(address.getId() != null) addressDTO.setId(address.getId());
-        if(address.getStreetAddress() != null) addressDTO.setStreetAddress(address.getStreetAddress());
-        if(address.getCity() != null) addressDTO.setCity(address.getCity());
-        if(address.getPostalCode() != null) addressDTO.setPostalCode(address.getPostalCode());
-        if(address.getProvince() != null) addressDTO.setProvince(address.getProvince());
-        if(address.getCountry() != null) addressDTO.setCountry(address.getCountry());
-        return addressDTO;
+        return new AddressDTO(address.getId(), address.getStreetAddress(),
+                address.getCity(), address.getPostalCode(), address.getProvince(), address.getCountry());
     }
 
     public Address toAddress(AddressDTO addressDTO) {
         var address = new Address();
-        if(addressDTO.getId() != null) address.setId(addressDTO.getId());
-        if(addressDTO.getStreetAddress() != null) address.setStreetAddress(addressDTO.getStreetAddress());
-        if(addressDTO.getCity() != null) address.setCity(addressDTO.getCity());
-        if(addressDTO.getPostalCode() != null) address.setPostalCode(addressDTO.getPostalCode());
-        if(addressDTO.getProvince() != null) address.setProvince(addressDTO.getProvince());
-        if(addressDTO.getCountry() != null) address.setCountry(addressDTO.getCountry());
+        if(addressDTO.id() != null) address.setId(addressDTO.id());
+        if(addressDTO.streetAddress() != null) address.setStreetAddress(addressDTO.streetAddress());
+        if(addressDTO.city() != null) address.setCity(addressDTO.city());
+        if(addressDTO.postalCode() != null) address.setPostalCode(addressDTO.postalCode());
+        if(addressDTO.province() != null) address.setProvince(addressDTO.province());
+        if(addressDTO.country() != null) address.setCountry(addressDTO.country());
         return address;
     }
 }

@@ -26,13 +26,10 @@ public class AddressController {
         }
         return new ResponseEntity<>(addresses, HttpStatus.OK);
     }
-    //pogledaj kasnije kako namistit da ti vraca custom exceptions sa response entity
+
     @GetMapping("/{addressId}")
     public ResponseEntity<AddressDTO> GetAddress(@PathVariable UUID addressId) {
         var address = addressService.getAddressById(addressId);
-        if(address == null) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
         return new ResponseEntity<>(address, HttpStatus.OK);
     }
 
@@ -40,6 +37,9 @@ public class AddressController {
     public ResponseEntity<String> SaveAddress(@RequestBody AddressDTO addressDTO) {
         if(addressDTO == null) {
             return new ResponseEntity<>("Could not save Address!", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if(addressService.addressExists(addressDTO)) {
+            return new ResponseEntity<>("ERROR: Address already exists!", HttpStatus.BAD_REQUEST);
         }
         addressService.saveAddress(addressDTO);
         return new ResponseEntity<>("Address successfully saved successfully!", HttpStatus.OK);

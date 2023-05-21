@@ -7,26 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserDTO {
-    @Nullable
-    private UUID id;
-    @Nullable
-    private String username;
-    @Nullable
-    private String email;
-    @Nullable
-    private String firstName;
-    @Nullable
-    private String lastName;
-    @Nullable
-    private String phoneNumber;
-    @Nullable
-    private UUID roleId;
-    @Nullable
-    private UUID wishListId;
-    @Nullable
-    private UUID addressId;
+public record UserDTO(UUID id, UUID wishlistId,  String email,
+                      String firstName, String lastName,
+                      String phoneNumber, String role, AddressDTO addressDTO) {
 }
