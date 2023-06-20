@@ -2,7 +2,7 @@ package com.ilario.sparkmart.addresses;
 
 import com.ilario.sparkmart.models.Address;
 import com.ilario.sparkmart.repositories.IAddressRepository;
-import com.ilario.sparkmart.services.implementations.AddressServiceImpl;
+import com.ilario.sparkmart.services.implementations.AddressServiceImplIAddressService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,10 +15,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class AddressServiceTests {
     @Mock
     private IAddressRepository addressRepository;
-    private AddressServiceImpl addressService;
+    private AddressServiceImplIAddressService addressService;
     @BeforeEach
     void setUp() {
-        addressService = new AddressServiceImpl(addressRepository);
+        addressService = new AddressServiceImplIAddressService(addressRepository);
     }
 
     @Test

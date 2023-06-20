@@ -41,6 +41,8 @@ public class User implements UserDetails {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    private boolean isDisabled;
+
     @ManyToOne
     @JoinColumn(name="address_id")
     private Address address;
@@ -80,7 +82,5 @@ public class User implements UserDetails {
     }
 
     @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    public boolean isEnabled() { return !isDisabled; }
 }

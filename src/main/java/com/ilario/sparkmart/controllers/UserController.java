@@ -3,27 +3,32 @@ package com.ilario.sparkmart.controllers;
 import com.ilario.sparkmart.dto.AddressDTO;
 import com.ilario.sparkmart.dto.ChangePasswordDTO;
 import com.ilario.sparkmart.dto.UserDTO;
-import com.ilario.sparkmart.services.implementations.UserServiceImpl;
+import com.ilario.sparkmart.services.implementations.UserServiceImplI;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final UserServiceImpl userService;
+    private final UserServiceImplI userService;
 
-    public UserController(UserServiceImpl userService) {
+    public UserController(UserServiceImplI userService) {
         this.userService = userService;
     }
 
     @GetMapping("")
-    public ResponseEntity<Page<UserDTO>> GetAllUsers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
-        var users = userService.getAllUsers(page, pageSize);
+    public ResponseEntity<Page<UserDTO>> GetAllUsers(
+                @RequestParam(defaultValue = "0") int page,
+                @RequestParam(defaultValue = "10") int pageSize,
+                @RequestParam(defaultValue = "firstName") String sortBy,
+                @RequestParam(defaultValue = "asc") String sortDir,
+                @RequestParam(defaultValue = "customer") String userType,
+                @RequestParam(defaultValue = "") String keyword) {
+        var users = userService.getAll(page, pageSize, sortBy, sortDir, userType, keyword);
         if(users.isEmpty()) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
@@ -32,14 +37,14 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserDTO> GetUser(@PathVariable("userId")UUID userId) {
-        var userDTO = userService.getUserById(userId);
+        var userDTO = userService.getById(userId);
         if(userDTO == null) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
 
-    @GetMapping("/getUserByEmail/{userEmail}")
+    @GetMapping("/find-by-email/{userEmail}")
     public ResponseEntity<UserDTO> GetUserByEmail(@PathVariable("userEmail") String email) {
         if(email.isEmpty() || email.isBlank()) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
@@ -53,13 +58,13 @@ public class UserController {
         if(userDTO == null) {
             return new ResponseEntity<>("ERROR: Changes to the User could not be made!", HttpStatus.BAD_REQUEST);
         }
-        userService.updateUser(userId, userDTO);
+        userService.update(userId, userDTO);
         return new ResponseEntity<>("User was changed successfully!", HttpStatus.OK);
     }
 
     @PatchMapping("/change-password/{userId}")
     public ResponseEntity<String> ChangePassword(@PathVariable("userId") UUID userId, @RequestBody ChangePasswordDTO newPassword) {
-        var user = userService.getUserById(userId);
+        var user = userService.getById(userId);
         if(user == null) {
             return new ResponseEntity<>("ERROR: User dose not exist!", HttpStatus.BAD_REQUEST);
         }
@@ -78,7 +83,7 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<String> DeleteUser(@PathVariable("userId") UUID userId) {
-        userService.deleteUser(userId);
+        userService.delete(userId);
         return new ResponseEntity<>("User deleted successfully!", HttpStatus.OK);
     }
 }

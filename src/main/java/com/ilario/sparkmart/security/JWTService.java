@@ -43,7 +43,6 @@ public class JWTService {
 
     public String generateToken(UserDetails userDetails) {
         var extraClaims = new HashMap<String, Object>();
-        //extraClaims.put("role: ", userDetails.getAuthorities());
         return generateToken(extraClaims, userDetails);
     }
 
@@ -69,7 +68,7 @@ public class JWTService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
+                .setExpiration(new Date(System.currentTimeMillis() + 14400000))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

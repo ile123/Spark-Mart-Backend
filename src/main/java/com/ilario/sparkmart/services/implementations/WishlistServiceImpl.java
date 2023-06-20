@@ -22,7 +22,8 @@ public class WishlistServiceImpl implements IWishlistService {
 
     @Override
     public Wishlist getWishList(UUID id) {
-        return wishlistRepository.findById(id).get();
+        var wishlist = wishlistRepository.findById(id);
+        return wishlist.orElse(null);
     }
 
     @Override
