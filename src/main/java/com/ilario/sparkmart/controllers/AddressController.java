@@ -1,7 +1,8 @@
 package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.AddressDTO;
-import com.ilario.sparkmart.services.implementations.AddressServiceImpl;
+import com.ilario.sparkmart.services.implementations.AddressServiceImplIAddressService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,15 +13,20 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/addresses")
 public class AddressController {
-    private final AddressServiceImpl addressService;
+    private final AddressServiceImplIAddressService addressService;
 
-    public AddressController(AddressServiceImpl addressService) {
+    public AddressController(AddressServiceImplIAddressService addressService) {
         this.addressService = addressService;
     }
 
     @GetMapping("")
-    public ResponseEntity<List<AddressDTO>> GetAllAddresses() {
-        var addresses = addressService.getAllAddresses();
+    public ResponseEntity<Page<AddressDTO>> GetAllAddresses(
+                @RequestParam(defaultValue = "0") int page,
+                @RequestParam(defaultValue = "10") int pageSize,
+                @RequestParam(defaultValue = "streetAddress") String sortBy,
+                @RequestParam(defaultValue = "asc") String sortDir,
+                @RequestParam(defaultValue = "") String keyword) {
+        var addresses = addressService.getAll(page, pageSize, sortBy, sortDir, keyword);
         if(addresses.isEmpty()) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
@@ -29,7 +35,7 @@ public class AddressController {
 
     @GetMapping("/{addressId}")
     public ResponseEntity<AddressDTO> GetAddress(@PathVariable UUID addressId) {
-        var address = addressService.getAddressById(addressId);
+        var address = addressService.getById(addressId);
         return new ResponseEntity<>(address, HttpStatus.OK);
     }
 
@@ -41,7 +47,7 @@ public class AddressController {
         if(addressService.addressExists(addressDTO)) {
             return new ResponseEntity<>("ERROR: Address already exists!", HttpStatus.BAD_REQUEST);
         }
-        addressService.saveAddress(addressDTO);
+        addressService.saveToDB(addressDTO);
         return new ResponseEntity<>("Address successfully saved successfully!", HttpStatus.OK);
     }
 }

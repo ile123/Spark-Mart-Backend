@@ -2,24 +2,14 @@ package com.ilario.sparkmart.mappers;
 
 import com.ilario.sparkmart.dto.UserDTO;
 import com.ilario.sparkmart.models.User;
-import com.ilario.sparkmart.services.implementations.AddressServiceImpl;
-import com.ilario.sparkmart.services.implementations.UserServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserMapper {
-
-    @Autowired
-    private AddressServiceImpl addressService;
-    @Autowired
-    private UserServiceImpl userService;
-    private final AddressMapper addressMapper = new AddressMapper();
     public UserDTO toUserDTO(User user) {
-        var addressDTO = addressMapper.toAddressDTO(user.getAddress());
         return new UserDTO(user.getId(), user.getWishlist().getId(), user.getEmail(),
                 user.getFirstName(), user.getLastName(),
-                user.getPhoneNumber(), user.getRole().toString(), addressDTO);
+                user.getPhoneNumber(), user.getRole().toString(), user.getAddress().getId());
     }
 
     public User toUser(UserDTO userDTO) {
