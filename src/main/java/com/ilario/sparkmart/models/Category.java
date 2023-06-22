@@ -1,37 +1,36 @@
 package com.ilario.sparkmart.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
-//maybe change to ManyToMany?
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @Entity
 @Builder
-@Table(name = "addresses")
-public class Address {
+@Table(name = "categories")
+public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private String streetAddress;
-    private String city;
-    private String postalCode;
-    private String province;
-    private String country;
-
+    private String name;
+    private String description;
+    private boolean isDisabled;
+    private String picture;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy="address")
-    private Set<User> users = new HashSet<>();
+    @OneToMany(mappedBy = "category")
+    private Set<Product> products = new HashSet<>();
+
 }

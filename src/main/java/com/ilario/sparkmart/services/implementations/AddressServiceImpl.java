@@ -1,8 +1,11 @@
 package com.ilario.sparkmart.services.implementations;
 
 import com.ilario.sparkmart.dto.AddressDTO;
+import com.ilario.sparkmart.dto.UserDTO;
 import com.ilario.sparkmart.exceptions.addresses.AddressNotFoundException;
 import com.ilario.sparkmart.mappers.AddressMapper;
+import com.ilario.sparkmart.mappers.UserMapper;
+import com.ilario.sparkmart.models.User;
 import com.ilario.sparkmart.repositories.IAddressRepository;
 import com.ilario.sparkmart.services.IAddressService;
 import org.springframework.data.domain.*;
@@ -11,22 +14,17 @@ import com.ilario.sparkmart.models.Address;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class AddressServiceImplIAddressService implements IAddressService {
+public class AddressServiceImpl implements IAddressService {
     private final IAddressRepository addressRepository;
     private final AddressMapper addressMapper = new AddressMapper();
 
-    public AddressServiceImplIAddressService(IAddressRepository addressRepository) {
-        this.addressRepository = addressRepository;
-    }
+    private final UserMapper userMapper = new UserMapper();
 
-    @Override
-    public List<AddressDTO> getAllAddresses() {
-        var addresses = addressRepository.findAll();
-        return addresses.stream().map(addressMapper::toAddressDTO).collect(Collectors.toList());
+    public AddressServiceImpl(IAddressRepository addressRepository) {
+        this.addressRepository = addressRepository;
     }
 
     @Override
@@ -60,6 +58,22 @@ public class AddressServiceImplIAddressService implements IAddressService {
     }
 
     @Override
+    public Page<UserDTO> getAllUsersByAddress(UUID id, Pageable pageable) {
+        var address = addressRepository.findById(id);
+        if(address.isEmpty()) {
+            return new PageImpl<>(new ArrayList<UserDTO>(), pageable, 0);
+        }
+        var users = address
+                .get()
+                .getUsers()
+                .stream()
+                .filter(User::isEnabled)
+                .map(userMapper::toUserDTO)
+                .toList();
+        return new PageImpl<>(users, pageable, users.size());
+    }
+
+    @Override
     public AddressDTO getById(UUID uuid) {
         var address = addressRepository.findById(uuid);
         try {
@@ -88,7 +102,13 @@ public class AddressServiceImplIAddressService implements IAddressService {
                 page,
                 pageSize,
                 sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        var pageResult = addressRepository.findAll(pageable);
+        Page<Address> pageResult;
+        if(keyword.isEmpty()) {
+            pageResult = addressRepository.findAll(pageable);
+        }
+        else {
+            pageResult = addressRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
+        }
         var addressDTOs = pageResult
                 .getContent()
                 .stream()

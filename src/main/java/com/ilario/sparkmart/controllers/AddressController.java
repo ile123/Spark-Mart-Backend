@@ -1,21 +1,22 @@
 package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.AddressDTO;
-import com.ilario.sparkmart.services.implementations.AddressServiceImplIAddressService;
-import org.springframework.data.domain.Page;
+import com.ilario.sparkmart.dto.UserDTO;
+import com.ilario.sparkmart.services.implementations.AddressServiceImpl;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/addresses")
 public class AddressController {
-    private final AddressServiceImplIAddressService addressService;
+    private final AddressServiceImpl addressService;
 
-    public AddressController(AddressServiceImplIAddressService addressService) {
+    public AddressController(AddressServiceImpl addressService) {
         this.addressService = addressService;
     }
 
@@ -49,5 +50,23 @@ public class AddressController {
         }
         addressService.saveToDB(addressDTO);
         return new ResponseEntity<>("Address successfully saved successfully!", HttpStatus.OK);
+    }
+
+    @GetMapping("/get-all-users-by-address/{addressId}")
+    public ResponseEntity<Page<UserDTO>> GetAllUsersByAddress(@PathVariable UUID addressId,
+                                              @RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "10") int pageSize,
+                                              @RequestParam(defaultValue = "firstName") String sortBy,
+                                              @RequestParam(defaultValue = "asc") String sortDir) {
+        var address = addressService.getById(addressId);
+        Pageable pageable = PageRequest.of(
+                page,
+                pageSize,
+                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
+        if(address == null) {
+            return new ResponseEntity<>(new PageImpl<>(new ArrayList<UserDTO>(), pageable, 0), HttpStatus.OK);
+        }
+        var users = addressService.getAllUsersByAddress(addressId, pageable);
+        return new ResponseEntity<>(users, HttpStatus.OK);
     }
 }

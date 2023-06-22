@@ -1,4 +1,4 @@
-package com.ilario.sparkmart.security.misc;
+package com.ilario.sparkmart.security.misc.enums;
 
 public enum Role {
     ADMINISTRATOR,
