@@ -6,7 +6,7 @@ import com.ilario.sparkmart.exceptions.addresses.AddressCouldNotBeMappedExceptio
 import com.ilario.sparkmart.exceptions.users.UserNotFoundException;
 import com.ilario.sparkmart.mappers.UserMapper;
 import com.ilario.sparkmart.models.User;
-import com.ilario.sparkmart.security.misc.Role;
+import com.ilario.sparkmart.security.misc.enums.Role;
 import org.springframework.data.domain.*;
 import com.ilario.sparkmart.repositories.IUserRepository;
 import com.ilario.sparkmart.services.IUserService;
@@ -19,11 +19,11 @@ import java.util.*;
 public class UserServiceImplI implements IUserService {
 
     private final IUserRepository userRepository;
-    private final AddressServiceImplIAddressService addressService;
+    private final AddressServiceImpl addressService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper = new UserMapper();
 
-    public UserServiceImplI(IUserRepository userRepository, AddressServiceImplIAddressService addressService, PasswordEncoder passwordEncoder) {
+    public UserServiceImplI(IUserRepository userRepository, AddressServiceImpl addressService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.addressService = addressService;
         this.passwordEncoder = passwordEncoder;
@@ -142,7 +142,6 @@ public class UserServiceImplI implements IUserService {
                 page,
                 pageSize,
                 sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        System.out.println(userType);
         Page<User> pageResult;
         if(keyword.isEmpty()) {
             pageResult = userRepository.findAllByRole(Role.valueOf(userType.toUpperCase()), pageable);

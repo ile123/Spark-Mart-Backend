@@ -2,7 +2,7 @@ package com.ilario.sparkmart.repositories;
 
 import com.ilario.sparkmart.models.User;
 
-import com.ilario.sparkmart.security.misc.Role;
+import com.ilario.sparkmart.security.misc.enums.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

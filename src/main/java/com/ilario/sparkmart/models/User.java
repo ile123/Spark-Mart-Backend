@@ -1,6 +1,7 @@
 package com.ilario.sparkmart.models;
 
-import com.ilario.sparkmart.security.misc.Role;
+import com.ilario.sparkmart.security.misc.enums.Gender;
+import com.ilario.sparkmart.security.misc.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,14 +35,16 @@ public class User implements UserDetails {
     private String lastName;
     private String phoneNumber;
     @Enumerated(EnumType.STRING)
+    private Gender gender;
+    @Enumerated(EnumType.STRING)
     private Role role;
+
+    private boolean isDisabled;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-    private boolean isDisabled;
 
     @ManyToOne
     @JoinColumn(name="address_id")
