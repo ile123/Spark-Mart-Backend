@@ -15,7 +15,7 @@ import com.ilario.sparkmart.security.misc.AuthenticationResponse;
 import com.ilario.sparkmart.security.misc.RegisterRequest;
 import com.ilario.sparkmart.security.misc.enums.Gender;
 import com.ilario.sparkmart.security.misc.enums.Role;
-import com.ilario.sparkmart.services.implementations.UserServiceImplI;
+import com.ilario.sparkmart.services.implementations.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,7 +29,7 @@ public class AuthenticationService {
     private final IUserRepository userRepository;
     private final IAddressRepository addressRepository;
     private final IWishlistRepository wishlistRepository;
-    private final UserServiceImplI userService;
+    private final UserServiceImpl userService;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;

@@ -16,14 +16,14 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
-public class UserServiceImplI implements IUserService {
+public class UserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
     private final AddressServiceImpl addressService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper = new UserMapper();
 
-    public UserServiceImplI(IUserRepository userRepository, AddressServiceImpl addressService, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(IUserRepository userRepository, AddressServiceImpl addressService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.addressService = addressService;
         this.passwordEncoder = passwordEncoder;

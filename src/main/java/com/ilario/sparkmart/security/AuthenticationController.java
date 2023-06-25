@@ -4,7 +4,7 @@ import com.ilario.sparkmart.security.misc.AuthenticationRequest;
 import com.ilario.sparkmart.security.misc.AuthenticationResponse;
 import com.ilario.sparkmart.security.misc.RegisterRequest;
 import com.ilario.sparkmart.security.misc.UserInformation;
-import com.ilario.sparkmart.services.implementations.UserServiceImplI;
+import com.ilario.sparkmart.services.implementations.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
@@ -21,7 +21,7 @@ import java.util.Base64;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
-    private final UserServiceImplI userService;
+    private final UserServiceImpl userService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(
@@ -63,7 +63,7 @@ public class AuthenticationController {
         String payload = new String(decoder.decode(pieces[1]));
         var jsonObject = new JSONObject(payload);
         var user = userService.getUserByEmail(jsonObject.get("sub").toString());
-        var userInformation = new UserInformation(user.id(), user.role());
+        var userInformation = new UserInformation(user.id(), user.firstName(), user.role());
         return ResponseEntity.ok(userInformation);
     }
 

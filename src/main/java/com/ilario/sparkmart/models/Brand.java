@@ -32,4 +32,8 @@ public class Brand {
 
     @OneToMany(mappedBy = "brand")
     private Set<Product> products = new HashSet<>();
+
+    public boolean isEnabled() {
+        return !isDisabled;
+    }
 }
