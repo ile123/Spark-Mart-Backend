@@ -2,7 +2,7 @@ package com.ilario.sparkmart.users;
 
 import com.ilario.sparkmart.models.User;
 import com.ilario.sparkmart.repositories.IUserRepository;
-import com.ilario.sparkmart.services.implementations.UserServiceImplI;
+import com.ilario.sparkmart.services.implementations.UserServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -13,7 +13,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class UserServiceTests {
     @Mock
     private IUserRepository userRepository;
-    private UserServiceImplI userService;
+    private UserServiceImpl userService;
 
     @Test
     void SaveUserTest() {

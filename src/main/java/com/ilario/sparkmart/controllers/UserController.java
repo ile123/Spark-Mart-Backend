@@ -3,7 +3,7 @@ package com.ilario.sparkmart.controllers;
 import com.ilario.sparkmart.dto.AddressDTO;
 import com.ilario.sparkmart.dto.ChangePasswordDTO;
 import com.ilario.sparkmart.dto.UserDTO;
-import com.ilario.sparkmart.services.implementations.UserServiceImplI;
+import com.ilario.sparkmart.services.implementations.UserServiceImpl;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +14,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final UserServiceImplI userService;
+    private final UserServiceImpl userService;
 
-    public UserController(UserServiceImplI userService) {
+    public UserController(UserServiceImpl userService) {
         this.userService = userService;
     }
 
