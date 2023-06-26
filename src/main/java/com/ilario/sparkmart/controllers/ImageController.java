@@ -30,7 +30,7 @@ public class ImageController {
 
     @GetMapping("/category/{imageName}")
     public ResponseEntity<byte[]> GetCategoryImage(@PathVariable String imageName) throws IOException {
-        Resource resource = new ClassPathResource("static/images/category-photos/" + imageName);
+        Resource resource = new ClassPathResource("images/category-photos/" + imageName);
         byte[] imageBytes = Files.readAllBytes(Path.of(resource.getURI()));
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
@@ -39,7 +39,7 @@ public class ImageController {
 
     @GetMapping("/product/{imageName}")
     public ResponseEntity<byte[]> GetProductImage(@PathVariable String imageName) throws IOException {
-        Resource resource = new ClassPathResource("static/images/product-photos/" + imageName);
+        Resource resource = new ClassPathResource("images/product-photos/" + imageName);
         byte[] imageBytes = Files.readAllBytes(Path.of(resource.getURI()));
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)

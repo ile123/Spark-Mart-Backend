@@ -12,7 +12,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -55,6 +58,11 @@ public class CategoryController {
         var category = categoryService.getById(categoryId);
         if(category == null) {
             return new ResponseEntity<>("ERROR: Category not found!", HttpStatus.NOT_FOUND);
+        }
+        try {
+            Files.delete(Path.of("src/main/resources/images/category-photos" + category.imageName()));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
