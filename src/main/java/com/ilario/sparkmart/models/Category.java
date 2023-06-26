@@ -21,10 +21,10 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private String name;
-    private String description;
-    private boolean isDisabled;
-    private String picture;
+    private String name = "";
+    private String description = "";
+    private boolean isDisabled = false;
+    private String picture = "";
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp

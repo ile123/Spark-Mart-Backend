@@ -1,10 +1,9 @@
 package com.ilario.sparkmart.services.implementations;
 
-import com.ilario.sparkmart.dto.BrandDTO;
 import com.ilario.sparkmart.dto.CategoryDTO;
 import com.ilario.sparkmart.exceptions.brands.BrandNotFoundException;
+import com.ilario.sparkmart.exceptions.categories.CategoryNotFoundException;
 import com.ilario.sparkmart.mappers.CategoryMapper;
-import com.ilario.sparkmart.models.Brand;
 import com.ilario.sparkmart.models.Category;
 import com.ilario.sparkmart.repositories.ICategoryRepository;
 import com.ilario.sparkmart.services.ICategoryService;
@@ -34,10 +33,10 @@ public class CategoryServiceImpl implements ICategoryService {
         try {
             var category = categoryRepository.findById(uuid);
             if(category.isEmpty()) {
-                throw new BrandNotFoundException("ERROR: Brand not found by given ID!");
+                throw new CategoryNotFoundException("ERROR: Category not found by given ID!");
             }
             return categoryMapper.toCategoryDTO(category.get());
-        } catch (BrandNotFoundException exception) {
+        } catch (CategoryNotFoundException exception) {
             System.out.println(exception.getMessage());
         }
         return null;

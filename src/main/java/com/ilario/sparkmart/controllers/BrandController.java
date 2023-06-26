@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
-
+//izbaci slike iz springboot projekta u neki vanjski folder, tada ce se odmah slike moc prikazivati
 @RestController
 @RequestMapping("/brands")
 public class BrandController {

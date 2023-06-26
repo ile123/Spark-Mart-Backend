@@ -21,11 +21,11 @@ public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private String streetAddress;
-    private String city;
-    private String postalCode;
-    private String province;
-    private String country;
+    private String streetAddress = "";
+    private String city = "";
+    private String postalCode = "";
+    private String province = "";
+    private String country = "";
 
     @CreationTimestamp
     private LocalDateTime createdAt;
