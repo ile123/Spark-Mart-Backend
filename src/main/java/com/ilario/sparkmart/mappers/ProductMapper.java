@@ -3,6 +3,7 @@ package com.ilario.sparkmart.mappers;
 import com.ilario.sparkmart.dto.DisplayProductDTO;
 import com.ilario.sparkmart.dto.ProductDTO;
 import com.ilario.sparkmart.models.Product;
+import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 
 @Component

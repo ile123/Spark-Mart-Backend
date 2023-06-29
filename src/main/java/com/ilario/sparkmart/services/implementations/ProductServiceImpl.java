@@ -74,7 +74,7 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public Page<DisplayProductDTO> getAllDisplayProduct(int page, int pageSize, String sortBy, String sortDir, String keyword) {
+    public Page<DisplayProductDTO> getAllDisplayProducts(int page, int pageSize, String sortBy, String sortDir, String keyword) {
         Pageable pageable = PageRequest.of(
                 page,
                 pageSize,
@@ -105,6 +105,7 @@ public class ProductServiceImpl implements IProductService {
         product.setName(entity.name());
         product.setDescription(entity.description());
         product.setShortDescription(entity.shortDescription());
+        product.setSpecifications(entity.specifications());
         product.setPrice(entity.price());
         product.setPicture(entity.picture());
         product.setQuantity(entity.quantity());
@@ -124,24 +125,26 @@ public class ProductServiceImpl implements IProductService {
 
     @Override
     public void saveProductToTheDB(MultipartFile image, String name,
-                                 String description, String shortDescription,
-                                 Double price, Integer quantity,
-                                 String brand, String category) throws IOException {
+                                   String description, String shortDescription, String specifications,
+                                   Double price, Integer quantity,
+                                   String brand, String category) throws IOException {
         var product = new Product();
-        var brandToSave = brandRepository.findByName(brand);
-        var categoryToSave = categoryRepository.findByName(category);
+        var brandToSave = brandRepository.findByName(brand.toLowerCase());
+        var categoryToSave = categoryRepository.findByName(category.toLowerCase());
         brandToSave.getProducts().add(product);
         categoryToSave.getProducts().add(product);
         product.setName(name);
         product.setDescription(description);
         product.setShortDescription(shortDescription);
+        product.setSpecifications(specifications);
         product.setPrice(price);
         product.setQuantity(quantity);
+        product.setBrand(brandToSave);
+        product.setCategory(categoryToSave);
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
         product.setPicture(newFileName);
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-        String uploadDir = "src/main/resources/images/product-photos";
-        FileUploadUtil.saveFile(uploadDir, fileName, image);
+        FileUploadUtil.saveFile("product-photos", fileName, image);
         productRepository.save(product);
     }
 

@@ -12,11 +12,11 @@ import java.util.UUID;
 
 public interface IProductService extends IBaseService<ProductDTO, UUID> {
     void saveProductToTheDB(MultipartFile image, String name,
-                            String description, String shortDescription,
+                            String description, String shortDescription, String specifications,
                             Double price, Integer quantity,
                             String brand, String category) throws IOException;
 
     Product getProductFromDB(UUID id);
 
-    public Page<DisplayProductDTO> getAllDisplayProduct(int page, int pageSize, String sortBy, String sortDir, String keyword);
+    Page<DisplayProductDTO> getAllDisplayProducts(int page, int pageSize, String sortBy, String sortDir, String keyword);
 }

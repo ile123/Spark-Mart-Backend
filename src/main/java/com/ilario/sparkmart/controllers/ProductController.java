@@ -33,7 +33,7 @@ public class ProductController {
                                                                         @RequestParam(defaultValue = "name") String sortBy,
                                                                         @RequestParam(defaultValue = "asc") String sortDir,
                                                                         @RequestParam(defaultValue = "") String keyword) {
-        var allProducts = productService.getAllDisplayProduct(page, pageSize, sortBy, sortDir, keyword);
+        var allProducts = productService.getAllDisplayProducts(page, pageSize, sortBy, sortDir, keyword);
         return new ResponseEntity<>(allProducts, HttpStatus.OK);
     }
 
@@ -43,21 +43,22 @@ public class ProductController {
         if(product == null) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
+        System.out.println(product.specifications());
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
     @PostMapping("")
     public ResponseEntity<String> SaveProduct(@RequestParam("image") MultipartFile image, @RequestParam("name") String name,
-                                              @RequestParam("description") String description,@RequestParam("shortDescription") String shortDescription,
-                                              @RequestParam("price") Double price,@RequestParam("quantity") Integer quantity,
-                                              @RequestParam("brand") String brand,@RequestParam("category") String category) throws IOException {
-        productService.saveProductToTheDB(image, name, description, shortDescription, price, quantity, brand, category);
+                                              @RequestParam("description") String description, @RequestParam("shortDescription") String shortDescription,
+                                              @RequestParam("price") Double price, @RequestParam("quantity") Integer quantity, @RequestParam("specifications") String specifications,
+                                              @RequestParam("brand") String brand, @RequestParam("category") String category) throws IOException {
+        productService.saveProductToTheDB(image, name, description, shortDescription, specifications, price, quantity, brand, category);
         return ResponseEntity.ok("Product saved successfully");
     }
 
     @PutMapping("/{productId}")
     public ResponseEntity<String> UpdateProduct(@PathVariable("productId") UUID productId, @RequestParam("image") MultipartFile image, @RequestParam("name") String name,
-                                                @RequestParam("description") String description,@RequestParam("shortDescription") String shortDescription,
+                                                @RequestParam("description") String description,@RequestParam("shortDescription") String shortDescription, @RequestParam("specifications") String specifications,
                                                 @RequestParam("price") Double price,@RequestParam("quantity") Integer quantity,
                                                 @RequestParam("brand") String brand,@RequestParam("category") String category) throws IOException {
         var product = productService.getById(productId);
@@ -66,12 +67,11 @@ public class ProductController {
         }
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-        String uploadDir = "src/main/resources/images/product-photos";
-        FileUploadUtil.saveFile(uploadDir, fileName, image);
+        FileUploadUtil.saveFile("product-photos", fileName, image);
         productService.update(productId, new ProductDTO(
                 productId, name,
                 description, shortDescription,
-                "{}", price,
+                specifications, price,
                 newFileName, quantity,
                 brand, category));
         return new ResponseEntity<>("Product successfully updated!", HttpStatus.OK);

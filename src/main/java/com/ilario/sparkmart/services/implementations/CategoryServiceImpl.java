@@ -1,7 +1,7 @@
 package com.ilario.sparkmart.services.implementations;
 
 import com.ilario.sparkmart.dto.CategoryDTO;
-import com.ilario.sparkmart.exceptions.brands.BrandNotFoundException;
+import com.ilario.sparkmart.dto.DisplayCategoryDTO;
 import com.ilario.sparkmart.exceptions.categories.CategoryNotFoundException;
 import com.ilario.sparkmart.mappers.CategoryMapper;
 import com.ilario.sparkmart.models.Category;
@@ -101,13 +101,33 @@ public class CategoryServiceImpl implements ICategoryService {
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
         category.setPicture(newFileName);
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-        String uploadDir = "src/main/resources/images/category-photos";
-        FileUploadUtil.saveFile(uploadDir, fileName, image);
+        FileUploadUtil.saveFile("category-photos", fileName, image);
         categoryRepository.save(category);
     }
 
     @Override
     public Category getCategoryFromDB(UUID id) {
         return categoryRepository.getReferenceById(id);
+    }
+
+    @Override
+    public Page<DisplayCategoryDTO> getAllCategoryDisplays(int page, int pageSize, String sortBy, String sortDir, String keyword) {
+        Pageable pageable = PageRequest.of(
+                page,
+                pageSize,
+                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
+        Page<Category> pageResult;
+        if(keyword.isEmpty()) {
+            pageResult = categoryRepository.findAll(pageable);
+        } else {
+            pageResult = categoryRepository.findAllByKeyword(keyword, pageable);
+        }
+        var categoriesDTO = pageResult
+                .getContent()
+                .stream()
+                .filter(Category::isEnabled)
+                .map(categoryMapper::toDisplayCategoryDTO)
+                .toList();
+        return new PageImpl<>(categoriesDTO, pageable, pageResult.getTotalElements());
     }
 }

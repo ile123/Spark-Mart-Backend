@@ -1,6 +1,8 @@
 package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.BrandDTO;
+import com.ilario.sparkmart.dto.DisplayBrandDTO;
+import com.ilario.sparkmart.dto.DisplayProductDTO;
 import com.ilario.sparkmart.services.IBrandService;
 import com.ilario.sparkmart.utility.FileUploadUtil;
 import org.springframework.data.domain.Page;
@@ -10,7 +12,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.UUID;
 //izbaci slike iz springboot projekta u neki vanjski folder, tada ce se odmah slike moc prikazivati
@@ -41,6 +46,16 @@ public class BrandController {
         return new ResponseEntity<>(brand, HttpStatus.OK);
     }
 
+    @GetMapping("/get-all-brand-displays")
+    public ResponseEntity<Page<DisplayBrandDTO>> GetAllDisplayBrands(@RequestParam(defaultValue = "0") int page,
+                                                                         @RequestParam(defaultValue = "10") int pageSize,
+                                                                         @RequestParam(defaultValue = "name") String sortBy,
+                                                                         @RequestParam(defaultValue = "asc") String sortDir,
+                                                                         @RequestParam(defaultValue = "") String keyword) {
+        var allDisplays = brandService.getAllDisplayBrands(page, pageSize, sortBy, sortDir, keyword);
+        return new ResponseEntity<>(allDisplays, HttpStatus.OK);
+    }
+
     @PostMapping("")
     public ResponseEntity<String> SaveBrand(@RequestParam("image") MultipartFile image, @RequestParam("name") String name) throws IOException {
         brandService.saveBrandToTheDB(image, name);
@@ -55,8 +70,7 @@ public class BrandController {
         }
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-        String uploadDir = "src/main/resources/images/brand-photos";
-        FileUploadUtil.saveFile(uploadDir, fileName, image);
+        FileUploadUtil.saveFile("brand-photos", fileName, image);
         brandService.update(brandId, new BrandDTO(brandId, name, newFileName));
         return new ResponseEntity<>("Brand successfully updated!", HttpStatus.OK);
     }
