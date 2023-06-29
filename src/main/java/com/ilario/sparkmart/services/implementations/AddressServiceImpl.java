@@ -35,7 +35,7 @@ public class AddressServiceImpl implements IAddressService {
                 .toList();
         return addresses.get(addresses.size() - 1);
     }
-//prijasnja verzija je imala if gdje se gledala jeli postoji, ako nepostoji onda se stvara prazna adresa, sprema se i vraca se
+
     @Override
     public Address getAddressByStreetNameAndCity(String streetName, String city) {
         try {

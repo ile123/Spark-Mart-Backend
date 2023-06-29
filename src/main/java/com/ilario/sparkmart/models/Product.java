@@ -28,7 +28,7 @@ public class Product {
     private String picture = "";
     private Integer quantity = 0;
 
-    private Boolean isDisabled;
+    private Boolean isDisabled = false;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
