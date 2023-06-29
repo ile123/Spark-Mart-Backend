@@ -1,6 +1,5 @@
 package com.ilario.sparkmart.repositories;
 
-import com.ilario.sparkmart.models.Category;
 import com.ilario.sparkmart.models.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

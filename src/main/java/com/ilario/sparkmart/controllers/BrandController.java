@@ -14,8 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import java.util.Objects;
 import java.util.UUID;
 //izbaci slike iz springboot projekta u neki vanjski folder, tada ce se odmah slike moc prikazivati
@@ -67,6 +69,11 @@ public class BrandController {
         var brand = brandService.getById(brandId);
         if(brand == null) {
             return new ResponseEntity<>("ERROR: Brand not found!", HttpStatus.NOT_FOUND);
+        }
+        try {
+            Files.delete(Path.of("src/main/resources/images/brand-photos" + brand.imageName()));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));

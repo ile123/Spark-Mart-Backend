@@ -58,11 +58,13 @@ public class UserServiceImpl implements IUserService {
                     addressDTO.city());
             if(existingAddress != null) {
                 user.setAddress(existingAddress);
+                existingAddress.getUsers().add(user);
                 userRepository.save(user);
             } else {
                 addressService.saveToDB(addressDTO);
                 var address = addressService.getLastSavedAddress();
                 user.setAddress(address);
+                address.getUsers().add(user);
                 userRepository.save(user);
             }
         } catch (AddressCouldNotBeMappedException | UserNotFoundException exception) {
