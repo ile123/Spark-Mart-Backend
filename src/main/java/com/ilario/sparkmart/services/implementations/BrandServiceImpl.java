@@ -1,6 +1,7 @@
 package com.ilario.sparkmart.services.implementations;
 
 import com.ilario.sparkmart.dto.BrandDTO;
+import com.ilario.sparkmart.dto.DisplayBrandDTO;
 import com.ilario.sparkmart.exceptions.brands.BrandNotFoundException;
 import com.ilario.sparkmart.mappers.BrandMapper;
 import com.ilario.sparkmart.models.Brand;
@@ -98,13 +99,33 @@ public class BrandServiceImpl implements IBrandService {
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
         brand.setPicture(newFileName);
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-        String uploadDir = "src/main/resources/images/brand-photos";
-        FileUploadUtil.saveFile(uploadDir, fileName, image);
+        FileUploadUtil.saveFile("brand-photos", fileName, image);
         brandRepository.save(brand);
     }
 
     @Override
     public Brand getBrandFromDB(UUID id) {
         return brandRepository.getReferenceById(id);
+    }
+
+    @Override
+    public Page<DisplayBrandDTO> getAllDisplayBrands(int page, int pageSize, String sortBy, String sortDir, String keyword) {
+        Pageable pageable = PageRequest.of(
+                page,
+                pageSize,
+                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
+        Page<Brand> pageResult;
+        if(keyword.isEmpty()) {
+            pageResult = brandRepository.findAll(pageable);
+        } else {
+            pageResult = brandRepository.findAllByKeyword(keyword, pageable);
+        }
+        var brandsDTO = pageResult
+                .getContent()
+                .stream()
+                .filter(Brand::isEnabled)
+                .map(brandMapper::toDisplayBrandDTO)
+                .toList();
+        return new PageImpl<>(brandsDTO, pageable, pageResult.getTotalElements());
     }
 }

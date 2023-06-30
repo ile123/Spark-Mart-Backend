@@ -29,17 +29,17 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private String email;
-    private String password;
-    private String firstName;
-    private String lastName;
-    private String phoneNumber;
+    private String email = "";
+    private String password = "";
+    private String firstName = "";
+    private String lastName = "";
+    private String phoneNumber = "";
     @Enumerated(EnumType.STRING)
-    private Gender gender;
+    private Gender gender = Gender.MALE;
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role role = Role.CUSTOMER;
 
-    private boolean isDisabled;
+    private boolean isDisabled = false;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

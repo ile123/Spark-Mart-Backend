@@ -19,16 +19,16 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private String name;
-    private String description;
-    private String shortDescription;
+    private String name = "";
+    private String description = "";
+    private String shortDescription = "";
     @Column( columnDefinition = "json" )
-    private String specifications;
-    private Double price;
-    private String picture;
-    private Long quantity;
+    private String specifications = "{}";
+    private Double price = 0.00;
+    private String picture = "";
+    private Integer quantity = 0;
 
-    private Boolean isDisabled;
+    private Boolean isDisabled = false;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -42,4 +42,8 @@ public class Product {
     @ManyToOne
     @JoinColumn(name="brand_id")
     private Brand brand;
+
+    public boolean isEnabled() {
+        return !isDisabled;
+    }
 }

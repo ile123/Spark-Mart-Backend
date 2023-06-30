@@ -2,6 +2,8 @@ package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.BrandDTO;
 import com.ilario.sparkmart.dto.CategoryDTO;
+import com.ilario.sparkmart.dto.DisplayBrandDTO;
+import com.ilario.sparkmart.dto.DisplayCategoryDTO;
 import com.ilario.sparkmart.models.Category;
 import com.ilario.sparkmart.services.ICategoryService;
 import com.ilario.sparkmart.utility.FileUploadUtil;
@@ -12,7 +14,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -33,6 +38,16 @@ public class CategoryController {
                                                           @RequestParam(defaultValue = "") String keyword) {
         var allCategories = categoryService.getAll(page, pageSize, sortBy, sortDir, keyword);
         return new ResponseEntity<>(allCategories, HttpStatus.OK);
+    }
+
+    @GetMapping("/get-all-category-displays")
+    public ResponseEntity<Page<DisplayCategoryDTO>> GetAllDisplayBrands(@RequestParam(defaultValue = "0") int page,
+                                                                            @RequestParam(defaultValue = "10") int pageSize,
+                                                                            @RequestParam(defaultValue = "name") String sortBy,
+                                                                            @RequestParam(defaultValue = "asc") String sortDir,
+                                                                            @RequestParam(defaultValue = "") String keyword) {
+        var allDisplays = categoryService.getAllCategoryDisplays(page, pageSize, sortBy, sortDir, keyword);
+        return new ResponseEntity<>(allDisplays, HttpStatus.OK);
     }
 
     @GetMapping("/{categoryId}")
@@ -56,10 +71,14 @@ public class CategoryController {
         if(category == null) {
             return new ResponseEntity<>("ERROR: Category not found!", HttpStatus.NOT_FOUND);
         }
+        try {
+            Files.delete(Path.of("src/main/resources/images/category-photos" + category.imageName()));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-        String uploadDir = "src/main/resources/images/category-photos";
-        FileUploadUtil.saveFile(uploadDir, fileName, image);
+        FileUploadUtil.saveFile("category-photos", fileName, image);
         categoryService.update(categoryId, new CategoryDTO(categoryId, name, description, newFileName));
         return new ResponseEntity<>("Category successfully updated!", HttpStatus.OK);
     }
