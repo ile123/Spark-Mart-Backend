@@ -35,9 +35,6 @@ build/
 ### Flyway Migrations ###
 db/migrations/
 
-### Images ###
-images/
-
 # Ignore images
 *.jpg
 *.jpeg
