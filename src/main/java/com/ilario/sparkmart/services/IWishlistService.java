@@ -11,5 +11,5 @@ public interface IWishlistService {
     Wishlist getLastWishlist();
     List<Wishlist> getAllWishlists();
     void saveWishList(Wishlist wishlist);
-    void saveProductWishlist(WishlistDTO wishlistDTO);
+    void saveOrRemoveProductWishlist(WishlistDTO wishlistDTO);
 }
