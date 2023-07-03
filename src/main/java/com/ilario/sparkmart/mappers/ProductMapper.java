@@ -18,3 +18,4 @@ public class ProductMapper {
     public DisplayProductDTO toDisplayProductDTO(Product product) {
         return new DisplayProductDTO(product.getId(), product.getName(), product.getPicture());
     }
+}

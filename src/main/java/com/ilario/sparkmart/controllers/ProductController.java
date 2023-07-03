@@ -29,21 +29,42 @@ public class ProductController {
 
     @GetMapping("")
     public ResponseEntity<Page<DisplayProductDTO>> GetAllDisplayProducts(@RequestParam(defaultValue = "0") int page,
-                                                                        @RequestParam(defaultValue = "10") int pageSize,
-                                                                        @RequestParam(defaultValue = "name") String sortBy,
-                                                                        @RequestParam(defaultValue = "asc") String sortDir,
-                                                                        @RequestParam(defaultValue = "") String keyword) {
+                                                                         @RequestParam(defaultValue = "10") int pageSize,
+                                                                         @RequestParam(defaultValue = "name") String sortBy,
+                                                                         @RequestParam(defaultValue = "asc") String sortDir,
+                                                                         @RequestParam(defaultValue = "") String keyword) {
         var allProducts = productService.getAllDisplayProducts(page, pageSize, sortBy, sortDir, keyword);
+        return new ResponseEntity<>(allProducts, HttpStatus.OK);
+    }
+
+    @GetMapping("/brand/{brand}")
+    public ResponseEntity<Page<DisplayProductDTO>> GetAllDisplayProductsByBrand(@RequestParam(defaultValue = "0") int page,
+                                                                                @RequestParam(defaultValue = "10") int pageSize,
+                                                                                @RequestParam(defaultValue = "name") String sortBy,
+                                                                                @RequestParam(defaultValue = "asc") String sortDir,
+                                                                                @RequestParam(defaultValue = "") String keyword,
+                                                                                @PathVariable("brand") String brand) {
+        var allProducts = productService.getAllDisplayProductsByBrand(page, pageSize, sortBy, sortDir, keyword, brand);
+        return new ResponseEntity<>(allProducts, HttpStatus.OK);
+    }
+
+    @GetMapping("/category/{category}")
+    public ResponseEntity<Page<DisplayProductDTO>> GetAllDisplayProductsByCategory(@RequestParam(defaultValue = "0") int page,
+                                                                                @RequestParam(defaultValue = "10") int pageSize,
+                                                                                @RequestParam(defaultValue = "name") String sortBy,
+                                                                                @RequestParam(defaultValue = "asc") String sortDir,
+                                                                                @RequestParam(defaultValue = "") String keyword,
+                                                                                @PathVariable("category") String category) {
+        var allProducts = productService.getAllDisplayProductsByCategory(page, pageSize, sortBy, sortDir, keyword, category);
         return new ResponseEntity<>(allProducts, HttpStatus.OK);
     }
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDTO> GetProduct(@PathVariable("productId") UUID productId) {
         var product = productService.getById(productId);
-        if(product == null) {
+        if (product == null) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
-        System.out.println(product.specifications());
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
@@ -58,11 +79,11 @@ public class ProductController {
 
     @PutMapping("/{productId}")
     public ResponseEntity<String> UpdateProduct(@PathVariable("productId") UUID productId, @RequestParam("image") MultipartFile image, @RequestParam("name") String name,
-                                                @RequestParam("description") String description,@RequestParam("shortDescription") String shortDescription, @RequestParam("specifications") String specifications,
-                                                @RequestParam("price") Double price,@RequestParam("quantity") Integer quantity,
-                                                @RequestParam("brand") String brand,@RequestParam("category") String category) throws IOException {
+                                                @RequestParam("description") String description, @RequestParam("shortDescription") String shortDescription, @RequestParam("specifications") String specifications,
+                                                @RequestParam("price") Double price, @RequestParam("quantity") Integer quantity,
+                                                @RequestParam("brand") String brand, @RequestParam("category") String category) throws IOException {
         var product = productService.getById(productId);
-        if(product == null) {
+        if (product == null) {
             return new ResponseEntity<>("ERROR: Product not found!", HttpStatus.NOT_FOUND);
         }
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
@@ -80,9 +101,10 @@ public class ProductController {
     @DeleteMapping("/{productId}")
     public ResponseEntity<String> DeleteProduct(@PathVariable("productId") UUID productId) {
         var product = productService.getProductFromDB(productId);
-        if(product == null) {
+        if (product == null) {
             return new ResponseEntity<>("ERROR: Product not found!", HttpStatus.NOT_FOUND);
         }
         productService.delete(productId);
         return new ResponseEntity<>("Product deleted successfully!", HttpStatus.OK);
     }
+}

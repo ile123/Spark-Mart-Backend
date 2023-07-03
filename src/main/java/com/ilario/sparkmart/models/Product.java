@@ -6,6 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -43,7 +45,21 @@ public class Product {
     @JoinColumn(name="brand_id")
     private Brand brand;
 
+    @OneToMany(mappedBy = "product")
+    private Set<OrderProduct> orders = new HashSet<>();
+
+    @OneToMany(mappedBy = "product")
+    private Set<WishlistProduct> wishlists = new HashSet<>();
+
     public boolean isEnabled() {
         return !isDisabled;
+    }
+
+    public boolean isCorrectBrand(Brand brand) {
+        return this.brand.equals(brand) && isEnabled();
+    }
+
+    public boolean isCorrectCategory(Category category) {
+        return this.category.equals(category) && isEnabled();
     }
 }

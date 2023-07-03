@@ -19,4 +19,8 @@ public interface IProductService extends IBaseService<ProductDTO, UUID> {
     Product getProductFromDB(UUID id);
 
     Page<DisplayProductDTO> getAllDisplayProducts(int page, int pageSize, String sortBy, String sortDir, String keyword);
+
+    Page<DisplayProductDTO> getAllDisplayProductsByBrand(int page, int pageSize, String sortBy, String sortDir, String keyword, String name);
+
+    Page<DisplayProductDTO> getAllDisplayProductsByCategory(int page, int pageSize, String sortBy, String sortDir, String keyword, String name);
 }

@@ -1,5 +1,6 @@
 package com.ilario.sparkmart.services.implementations;
 
+import com.ilario.sparkmart.dto.WishlistDTO;
 import com.ilario.sparkmart.models.Wishlist;
 import com.ilario.sparkmart.repositories.IWishlistRepository;
 import com.ilario.sparkmart.services.IWishlistService;
@@ -44,5 +45,10 @@ public class WishlistServiceImpl implements IWishlistService {
     @Override
     public void saveWishList(Wishlist wishlist) {
         wishlistRepository.save(wishlist);
+    }
+
+    @Override
+    public void saveProductWishlist(WishlistDTO wishlistDTO) {
+
     }
 }

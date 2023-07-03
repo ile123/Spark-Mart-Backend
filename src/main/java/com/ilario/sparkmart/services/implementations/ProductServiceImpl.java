@@ -95,6 +95,52 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
+    public Page<DisplayProductDTO> getAllDisplayProductsByBrand(int page, int pageSize, String sortBy, String sortDir, String keyword, String name) {
+        var brand = brandRepository.findByName(name.toLowerCase());
+        Pageable pageable = PageRequest.of(
+                page,
+                pageSize,
+                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
+        Page<Product> pageResult;
+        if(keyword.isEmpty()) {
+            pageResult = productRepository.findAllByBrand(brand, pageable);
+        } else {
+            pageResult = productRepository.findAllByBrandAndKeyword(brand, keyword, pageable);
+        }
+        var brandsDTO = pageResult
+                .getContent()
+                .stream()
+                .filter(Product::isEnabled)
+                .filter(x -> x.getBrand() == brand)
+                .map(productMapper::toDisplayProductDTO)
+                .toList();
+        return new PageImpl<>(brandsDTO, pageable, pageResult.getTotalElements());
+    }
+
+    @Override
+    public Page<DisplayProductDTO> getAllDisplayProductsByCategory(int page, int pageSize, String sortBy, String sortDir, String keyword, String name) {
+        var category = categoryRepository.findByName(name.toLowerCase());
+        Pageable pageable = PageRequest.of(
+                page,
+                pageSize,
+                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
+        Page<Product> pageResult;
+        if(keyword.isEmpty()) {
+            pageResult = productRepository.findAllByCategory(category, pageable);
+        } else {
+            pageResult = productRepository.findAllByCategoryAndKeyword(category, keyword, pageable);
+        }
+        var brandsDTO = pageResult
+                .getContent()
+                .stream()
+                .filter(Product::isEnabled)
+                .filter(x -> x.getCategory() == category)
+                .map(productMapper::toDisplayProductDTO)
+                .toList();
+        return new PageImpl<>(brandsDTO, pageable, pageResult.getTotalElements());
+    }
+
+    @Override
     public void update(UUID uuid, ProductDTO entity) {
         if(!productRepository.existsById(uuid)) return;
         var product = productRepository.getReferenceById(uuid);
