@@ -23,6 +23,9 @@ public class OrderProduct {
 
     private Short quantity;
     private Boolean isDelivered;
+
+    private LocalDateTime dateOfDelivery;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp

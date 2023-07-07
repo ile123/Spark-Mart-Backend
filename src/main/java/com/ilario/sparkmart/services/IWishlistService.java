@@ -12,4 +12,6 @@ public interface IWishlistService {
     List<Wishlist> getAllWishlists();
     void saveWishList(Wishlist wishlist);
     void saveOrRemoveProductWishlist(WishlistDTO wishlistDTO);
+
+    Boolean checkIfWishlistWasAlreadyAdded(WishlistDTO wishlistDTO);
 }

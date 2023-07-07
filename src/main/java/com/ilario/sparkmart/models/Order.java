@@ -29,6 +29,7 @@ public class Order {
     private Double total = 0.00;
     private LocalDateTime shippingDate;
     private Boolean isComplete = false;
+    private LocalDateTime arrivalDate;
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus = OrderStatus.PENDING;
 

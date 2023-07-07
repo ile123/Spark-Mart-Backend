@@ -60,7 +60,7 @@ public class WishlistServiceImpl implements IWishlistService {
     @Override
     public void saveOrRemoveProductWishlist(WishlistDTO wishlistDTO) {
         var user = userRepository.findById(wishlistDTO.userId());
-        var product = productRepository.findById(wishlistDTO.productID());
+        var product = productRepository.findById(wishlistDTO.productId());
         if(user.isEmpty() && product.isEmpty()) {
             return;
         }
@@ -75,6 +75,7 @@ public class WishlistServiceImpl implements IWishlistService {
             product.get().getWishlists().add(wishListProduct);
             wishlistRepository.save(user.get().getWishlist());
             productRepository.save(product.get());
+            wishlistProductRepository.save(wishListProduct);
         }
         else {
             user.get().getWishlist().getProducts().remove(existingWishlistProduct.get());
@@ -83,5 +84,12 @@ public class WishlistServiceImpl implements IWishlistService {
             productRepository.save(product.get());
             wishlistProductRepository.delete(existingWishlistProduct.get());
         }
+    }
+
+    @Override
+    public Boolean checkIfWishlistWasAlreadyAdded(WishlistDTO wishlistDTO) {
+        var user = userRepository.findById(wishlistDTO.userId());
+        var product = productRepository.findById(wishlistDTO.productId());
+        return wishlistProductRepository.findWishlistProductByWishlistAndProduct(user.get().getWishlist(), product.get()).isPresent();
     }
 }
