@@ -1,12 +1,17 @@
 package com.ilario.sparkmart.controllers;
 
+import com.ilario.sparkmart.dto.PurchaseDTO;
 import com.ilario.sparkmart.dto.WishlistDTO;
 import com.ilario.sparkmart.services.IProductService;
 import com.ilario.sparkmart.services.IUserService;
 import com.ilario.sparkmart.services.IWishlistService;
+import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/customer")
@@ -50,5 +55,12 @@ public class CustomerController {
         return new ResponseEntity<>("Wishlist added or removed successfully!", HttpStatus.OK);
     }
 
+    @PostMapping("/purchase")
+    public ResponseEntity<String> customerPurchaseProducts(@RequestBody PurchaseDTO purchaseDTO) {
+        if(purchaseDTO.products().isEmpty()) {
+            return new ResponseEntity<>("ERROR: Empty purchase JSON!", HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("Purchase created successfully", HttpStatus.OK);
+    }
 
 }

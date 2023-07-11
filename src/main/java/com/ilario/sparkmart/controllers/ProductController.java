@@ -1,9 +1,7 @@
 package com.ilario.sparkmart.controllers;
 
-import com.ilario.sparkmart.dto.CategoryDTO;
 import com.ilario.sparkmart.dto.DisplayProductDTO;
 import com.ilario.sparkmart.dto.ProductDTO;
-import com.ilario.sparkmart.models.Product;
 import com.ilario.sparkmart.services.IProductService;
 import com.ilario.sparkmart.utility.FileUploadUtil;
 import org.springframework.data.domain.Page;
