@@ -61,7 +61,7 @@ public class AddressServiceImpl implements IAddressService {
     public Page<UserDTO> getAllUsersByAddress(UUID id, Pageable pageable) {
         var address = addressRepository.findById(id);
         if(address.isEmpty()) {
-            return new PageImpl<>(new ArrayList<UserDTO>(), pageable, 0);
+            return new PageImpl<>(new ArrayList<>(), pageable, 0);
         }
         var users = address
                 .get()

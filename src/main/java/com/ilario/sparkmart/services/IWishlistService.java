@@ -1,5 +1,6 @@
 package com.ilario.sparkmart.services;
 
+import com.ilario.sparkmart.dto.WishlistDTO;
 import com.ilario.sparkmart.models.Wishlist;
 
 import java.util.List;
@@ -10,4 +11,7 @@ public interface IWishlistService {
     Wishlist getLastWishlist();
     List<Wishlist> getAllWishlists();
     void saveWishList(Wishlist wishlist);
+    void saveOrRemoveProductWishlist(WishlistDTO wishlistDTO);
+
+    Boolean checkIfWishlistWasAlreadyAdded(WishlistDTO wishlistDTO);
 }

@@ -9,6 +9,8 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -25,4 +27,7 @@ public class Wishlist {
 
     @OneToOne(mappedBy="wishlist")
     private User user;
+
+    @OneToMany(mappedBy="wishlist", orphanRemoval = true, cascade = CascadeType.PERSIST)
+    private Set<WishlistProduct> products = new HashSet<>();
 }

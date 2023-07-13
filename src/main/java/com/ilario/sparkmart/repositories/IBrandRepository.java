@@ -14,8 +14,8 @@ import java.util.UUID;
 @Repository
 public interface IBrandRepository extends JpaRepository<Brand, UUID> {
     @Query("SELECT x FROM Brand x WHERE LOWER(x.name) LIKE %:keyword%")
-    public Page<Brand> findAllByKeyword(@Param("keyword") String keyword, Pageable pageable);
+    Page<Brand> findAllByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("SELECT x FROM Brand x WHERE LOWER(x.name) = :keyword")
-    public Brand findByName(@Param("keyword") String keyword);
+    Brand findByName(@Param("keyword") String keyword);
 }
