@@ -2,6 +2,9 @@ package com.ilario.sparkmart.repositories;
 
 import com.ilario.sparkmart.models.Order;
 import com.ilario.sparkmart.models.User;
+import org.aspectj.weaver.ast.Or;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,4 +17,8 @@ public interface IOrderRepository extends JpaRepository<Order, UUID> {
 
     @Query("SELECT COUNT(x) FROM Order x WHERE x.user = :user")
     Integer getTotalAmountOfOrdersByUser(@Param("user")User user);
+
+    @Query("SELECT x FROM Order x WHERE x.user = :user")
+    Page<Order> getAllOrdersByUser(@Param("user") User user, Pageable pageable);
+
 }

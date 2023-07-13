@@ -28,6 +28,6 @@ public class Wishlist {
     @OneToOne(mappedBy="wishlist")
     private User user;
 
-    @OneToMany(mappedBy="wishlist", orphanRemoval = true)
+    @OneToMany(mappedBy="wishlist", orphanRemoval = true, cascade = CascadeType.PERSIST)
     private Set<WishlistProduct> products = new HashSet<>();
 }

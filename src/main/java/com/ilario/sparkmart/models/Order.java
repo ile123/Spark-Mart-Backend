@@ -27,9 +27,9 @@ public class Order {
     private String orderNO = "";
     private LocalDateTime orderDate = LocalDateTime.now();
     private Double total = 0.00;
-    private LocalDateTime shippingDate;
+    private LocalDateTime shippingDate = LocalDateTime.now().plusDays(1);
     private Boolean isComplete = false;
-    private LocalDateTime arrivalDate;
+    private LocalDateTime arrivalDate = LocalDateTime.now();
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus = OrderStatus.PENDING;
 

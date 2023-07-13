@@ -73,8 +73,6 @@ public class WishlistServiceImpl implements IWishlistService {
                     .build();
             user.get().getWishlist().getProducts().add(wishListProduct);
             product.get().getWishlists().add(wishListProduct);
-            wishlistRepository.save(user.get().getWishlist());
-            productRepository.save(product.get());
             wishlistProductRepository.save(wishListProduct);
         }
         else {

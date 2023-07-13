@@ -21,10 +21,10 @@ public class OrderProduct {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private Short quantity;
-    private Boolean isDelivered;
+    private Short quantity = 1;
+    private Boolean isDelivered = false;
 
-    private LocalDateTime dateOfDelivery;
+    private LocalDateTime dateOfDelivery = LocalDateTime.now();
 
     @CreationTimestamp
     private LocalDateTime createdAt;

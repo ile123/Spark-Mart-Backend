@@ -45,21 +45,14 @@ public class Product {
     @JoinColumn(name="brand_id")
     private Brand brand;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.PERSIST)
     private Set<OrderProduct> orders = new HashSet<>();
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.PERSIST)
     private Set<WishlistProduct> wishlists = new HashSet<>();
 
     public boolean isEnabled() {
         return !isDisabled;
     }
 
-    public boolean isCorrectBrand(Brand brand) {
-        return this.brand.equals(brand) && isEnabled();
-    }
-
-    public boolean isCorrectCategory(Category category) {
-        return this.category.equals(category) && isEnabled();
-    }
 }

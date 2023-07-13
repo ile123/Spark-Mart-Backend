@@ -52,7 +52,7 @@ public class User implements UserDetails {
     @JoinColumn(name="wishlist_id")
     private Wishlist wishlist;
 
-    @OneToMany(mappedBy="user")
+    @OneToMany(mappedBy="user", cascade = CascadeType.PERSIST)
     private Set<Order> orders = new HashSet<>();
 
     @Override
