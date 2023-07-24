@@ -1,6 +1,5 @@
 package com.ilario.sparkmart.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,7 +8,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
-//maybe change to ManyToMany?
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

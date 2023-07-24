@@ -1,9 +1,6 @@
 package com.ilario.sparkmart.services.implementations;
 
-import com.ilario.sparkmart.dto.DisplayProductDTO;
-import com.ilario.sparkmart.dto.OrderDTO;
-import com.ilario.sparkmart.dto.ProductDTO;
-import com.ilario.sparkmart.dto.PurchaseDTO;
+import com.ilario.sparkmart.dto.*;
 import com.ilario.sparkmart.exceptions.users.UserNotFoundException;
 import com.ilario.sparkmart.mappers.OrderMapper;
 import com.ilario.sparkmart.mappers.ProductMapper;
@@ -12,14 +9,13 @@ import com.ilario.sparkmart.models.OrderProduct;
 import com.ilario.sparkmart.models.Product;
 import com.ilario.sparkmart.models.WishlistProduct;
 import com.ilario.sparkmart.repositories.*;
+import com.ilario.sparkmart.security.misc.enums.OrderStatus;
 import com.ilario.sparkmart.services.IOrderService;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.beans.Transient;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class OrderServiceImpl implements IOrderService {
@@ -44,24 +40,9 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     public OrderDTO getById(UUID uuid) {
-        return null;
+        var order = orderRepository.findById(uuid);
+        return order.map(orderMapper::toOrderDTO).orElse(null);
     }
-
-    @Override
-    public void saveToDB(OrderDTO entity) {
-
-    }
-
-    @Override
-    public Page<OrderDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) {
-        return null;
-    }
-
-    @Override
-    public void update(UUID uuid, OrderDTO entity) {}
-
-    @Override
-    public void delete(UUID uuid) {}
 
     @Override
     @Transient
@@ -77,7 +58,7 @@ public class OrderServiceImpl implements IOrderService {
             products.add(product.get());
         }
         var order = new Order();
-        order.setOrderNO("ORDER: " + orderRepository.getTotalAmountOfOrdersByUser(user) + 1);
+        order.setOrderNO("ORDER: " + (orderRepository.getTotalAmountOfOrdersByUser(user) + 1));
         var total = products.stream()
                 .mapToDouble(Product::getPrice)
                 .sum();
@@ -87,9 +68,7 @@ public class OrderServiceImpl implements IOrderService {
         for(var product: products) {
             var orderProduct = new OrderProduct();
             var wishlistProduct = wishlistProductRepository.findWishlistProductByWishlistAndProduct(user.getWishlist(), product);
-            if(wishlistProduct.isPresent()) {
-                wishlistProductRepository.delete(wishlistProduct.get());
-            }
+            wishlistProduct.ifPresent(wishlistProductRepository::delete);
             product.setQuantity(product.getQuantity() - purchaseDTO.products().get(product.getId()));
             orderProduct.setOrder(order);
             orderProduct.setProduct(product);
@@ -102,12 +81,68 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    public void changeOrderStatus(UUID orderId) {
+        var order = orderRepository.findById(orderId);
+        if(order.isEmpty()) {
+            return;
+        }
+        switch (order.get().getOrderStatus()) {
+            case PENDING -> order.get().setOrderStatus(OrderStatus.PROCESSING);
+            case PROCESSING -> order.get().setOrderStatus(OrderStatus.SHIPPED);
+        }
+        orderRepository.save(order.get());
+    }
+
+    @Override
+    public void changeOrderProductStatus(UUID orderId, UUID productId) {
+        var order = orderRepository.findById(orderId);
+        var product = productRepository.findById(productId);
+        if(order.isEmpty() || product.isEmpty()) {
+            return;
+        }
+        var orderProduct = orderProductRepository.getOrderProductByOrderAndProduct(order.get(), product.get());
+        if(orderProduct.isEmpty()) {
+            return;
+        }
+        orderProduct.get().setIsDelivered(true);
+        orderProductRepository.save(orderProduct.get());
+        var allOrderProducts = orderProductRepository.getAllProductsByOrder(order.get());
+        boolean flag = true;
+        for(var item: allOrderProducts) {
+            if(!item.getIsDelivered()) {
+                flag = false;
+                break;
+            }
+        }
+        if(flag) {
+            order.get().setOrderStatus(OrderStatus.DELIVERED);
+            order.get().setIsComplete(true);
+            orderRepository.save(order.get());
+        }
+    }
+
+    @Override
     public Order getLastOrder() {
         var orders = orderRepository.findAll().stream().sorted(Comparator.comparing(Order::getCreatedAt)).toList();
         if(orders.isEmpty()) {
             return new Order();
         }
         return orders.get(orders.size() - 1);
+    }
+
+    @Override
+    public Optional<OrderProduct> getOrderProductByID(UUID id) {
+        return orderProductRepository.findById(id);
+    }
+
+    @Override
+    public List<OrderProductDTO> getAllProductsByOrder(UUID orderId) {
+        var order = orderRepository.findById(orderId);
+        if(order.isEmpty()) {
+            return new ArrayList<>();
+        }
+        var products = orderProductRepository.getAllProductsByOrder(order.get());
+        return products.stream().map(orderMapper::toOrderProductDTO).toList();
     }
 
     @Override
@@ -143,5 +178,16 @@ public class OrderServiceImpl implements IOrderService {
                 .map(x-> productMapper.toDisplayProductDTO(x.getProduct()))
                 .toList();
         return new PageImpl<>(productsDTO, pageable, pageResult.getTotalElements());
+    }
+
+    @Override
+    public ProductStatisticsDTO getProductStatistics(UUID productId) {
+        var product = productRepository.findById(productId);
+        if(product.isEmpty()) {
+            return new ProductStatisticsDTO(0,0, 0);
+        }
+        var totalSold = orderProductRepository.getTotalSoldFromProduct(product.get());
+        var totalProfit = (int)(totalSold * product.get().getPrice());
+        return new ProductStatisticsDTO(product.get().getQuantity(), totalSold, totalProfit);
     }
 }

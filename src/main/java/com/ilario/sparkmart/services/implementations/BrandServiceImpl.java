@@ -43,9 +43,6 @@ public class BrandServiceImpl implements IBrandService {
     }
 
     @Override
-    public void saveToDB(BrandDTO entity) {}
-
-    @Override
     public Page<BrandDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) {
         Pageable pageable = PageRequest.of(
                 page,
@@ -93,7 +90,7 @@ public class BrandServiceImpl implements IBrandService {
     }
 
     @Override
-    public void saveBrandToTheDB(MultipartFile image, String name) throws IOException {
+    public void saveToDB(MultipartFile image, String name) throws IOException {
         var brand = new Brand();
         brand.setName(name);
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));

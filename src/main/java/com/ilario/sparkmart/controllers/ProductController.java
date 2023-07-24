@@ -2,6 +2,8 @@ package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.DisplayProductDTO;
 import com.ilario.sparkmart.dto.ProductDTO;
+import com.ilario.sparkmart.dto.ProductStatisticsDTO;
+import com.ilario.sparkmart.services.IOrderService;
 import com.ilario.sparkmart.services.IProductService;
 import com.ilario.sparkmart.utility.FileUploadUtil;
 import org.springframework.data.domain.Page;
@@ -20,9 +22,11 @@ import java.util.UUID;
 public class ProductController {
 
     private final IProductService productService;
+    private final IOrderService orderService;
 
-    public ProductController(IProductService productService) {
+    public ProductController(IProductService productService, IOrderService orderService) {
         this.productService = productService;
+        this.orderService = orderService;
     }
 
     @GetMapping("")
@@ -66,12 +70,22 @@ public class ProductController {
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
+    @GetMapping("/product-information/{productId}")
+    public ResponseEntity<ProductStatisticsDTO> GetProductStatistic(@PathVariable("productId") UUID productId) {
+        var product = productService.getProductFromDB(productId);
+        if(product == null) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+        var productStats = orderService.getProductStatistics(productId);
+        return new ResponseEntity<>(productStats, HttpStatus.OK);
+    }
+
     @PostMapping("")
     public ResponseEntity<String> SaveProduct(@RequestParam("image") MultipartFile image, @RequestParam("name") String name,
                                               @RequestParam("description") String description, @RequestParam("shortDescription") String shortDescription,
                                               @RequestParam("price") Double price, @RequestParam("quantity") Integer quantity, @RequestParam("specifications") String specifications,
                                               @RequestParam("brand") String brand, @RequestParam("category") String category) throws IOException {
-        productService.saveProductToTheDB(image, name, description, shortDescription, specifications, price, quantity, brand, category);
+        productService.saveToDB(image, name, description, shortDescription, specifications, price, quantity, brand, category);
         return ResponseEntity.ok("Product saved successfully");
     }
 

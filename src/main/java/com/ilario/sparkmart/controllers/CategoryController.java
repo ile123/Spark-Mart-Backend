@@ -1,10 +1,7 @@
 package com.ilario.sparkmart.controllers;
 
-import com.ilario.sparkmart.dto.BrandDTO;
 import com.ilario.sparkmart.dto.CategoryDTO;
-import com.ilario.sparkmart.dto.DisplayBrandDTO;
 import com.ilario.sparkmart.dto.DisplayCategoryDTO;
-import com.ilario.sparkmart.models.Category;
 import com.ilario.sparkmart.services.ICategoryService;
 import com.ilario.sparkmart.utility.FileUploadUtil;
 import org.springframework.data.domain.Page;
@@ -14,7 +11,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,7 +57,7 @@ public class CategoryController {
 
     @PostMapping("")
     public ResponseEntity<String> SaveCategory(@RequestParam("image") MultipartFile image, @RequestParam("name") String name, @RequestParam("description") String description) throws IOException {
-        categoryService.saveCategoryToTheDB(image, name, description);
+        categoryService.saveToDB(image, name, description);
         return ResponseEntity.ok("Category saved successfully");
     }
 

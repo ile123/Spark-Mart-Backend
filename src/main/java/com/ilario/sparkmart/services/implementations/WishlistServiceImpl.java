@@ -1,20 +1,15 @@
 package com.ilario.sparkmart.services.implementations;
 
 import com.ilario.sparkmart.dto.WishlistDTO;
-import com.ilario.sparkmart.models.Wishlist;
+
 import com.ilario.sparkmart.models.WishlistProduct;
 import com.ilario.sparkmart.repositories.IProductRepository;
 import com.ilario.sparkmart.repositories.IUserRepository;
 import com.ilario.sparkmart.repositories.IWishlistProductRepository;
 import com.ilario.sparkmart.repositories.IWishlistRepository;
-import com.ilario.sparkmart.services.IProductService;
-import com.ilario.sparkmart.services.IUserService;
 import com.ilario.sparkmart.services.IWishlistService;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 public class WishlistServiceImpl implements IWishlistService {
@@ -30,33 +25,6 @@ public class WishlistServiceImpl implements IWishlistService {
         this.wishlistProductRepository = wishlistProductRepository;
         this.productRepository = productRepository;
     }
-
-    @Override
-    public Wishlist getWishList(UUID id) {
-        var wishlist = wishlistRepository.findById(id);
-        return wishlist.orElse(null);
-    }
-
-    @Override
-    public Wishlist getLastWishlist() {
-        var wishlists = wishlistRepository
-                .findAll()
-                .stream()
-                .sorted(Comparator.comparing(Wishlist::getCreatedAt))
-                .toList();
-        return wishlists.get(wishlists.size() - 1);
-    }
-
-    @Override
-    public List<Wishlist> getAllWishlists() {
-        return wishlistRepository.findAll();
-    }
-
-    @Override
-    public void saveWishList(Wishlist wishlist) {
-        wishlistRepository.save(wishlist);
-    }
-
     @Override
     public void saveOrRemoveProductWishlist(WishlistDTO wishlistDTO) {
         var user = userRepository.findById(wishlistDTO.userId());

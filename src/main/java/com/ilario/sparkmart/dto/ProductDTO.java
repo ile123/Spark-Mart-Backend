@@ -1,7 +1,5 @@
 package com.ilario.sparkmart.dto;
 
-import jakarta.persistence.Column;
-
 import java.util.UUID;
 
 public record ProductDTO(

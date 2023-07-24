@@ -24,7 +24,7 @@ public class OrderProduct {
     private Short quantity = 1;
     private Boolean isDelivered = false;
 
-    private LocalDateTime dateOfDelivery = LocalDateTime.now();
+    private LocalDateTime dateOfDelivery = LocalDateTime.now().plusDays(14);
 
     @CreationTimestamp
     private LocalDateTime createdAt;

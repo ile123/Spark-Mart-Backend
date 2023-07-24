@@ -2,7 +2,6 @@ package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.BrandDTO;
 import com.ilario.sparkmart.dto.DisplayBrandDTO;
-import com.ilario.sparkmart.dto.DisplayProductDTO;
 import com.ilario.sparkmart.services.IBrandService;
 import com.ilario.sparkmart.utility.FileUploadUtil;
 import org.springframework.data.domain.Page;
@@ -12,16 +11,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import java.util.Objects;
 import java.util.UUID;
-//izbaci slike iz springboot projekta u neki vanjski folder, tada ce se odmah slike moc prikazivati
 @RestController
 @RequestMapping("/brands")
 public class BrandController {
@@ -61,7 +57,7 @@ public class BrandController {
 
     @PostMapping("")
     public ResponseEntity<String> SaveBrand(@RequestParam("image") MultipartFile image, @RequestParam("name") String name) throws IOException {
-        brandService.saveBrandToTheDB(image, name);
+        brandService.saveToDB(image, name);
         return ResponseEntity.ok("Brand saved successfully");
     }
 

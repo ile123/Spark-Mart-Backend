@@ -43,9 +43,6 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
-    public void saveToDB(CategoryDTO entity) {}
-
-    @Override
     public Page<CategoryDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) {
         Pageable pageable = PageRequest.of(
                 page,
@@ -94,7 +91,7 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
-    public void saveCategoryToTheDB(MultipartFile image, String name, String description) throws IOException {
+    public void saveToDB(MultipartFile image, String name, String description) throws IOException {
         var category = new Category();
         category.setName(name);
         category.setDescription(description);

@@ -9,8 +9,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.UUID;
 
-public interface ICategoryService extends IBaseService<CategoryDTO, UUID> {
-    void saveCategoryToTheDB(MultipartFile image, String name, String description) throws IOException;
+public interface ICategoryService {
+    CategoryDTO getById(UUID id);
+    void saveToDB(MultipartFile image, String name, String description) throws IOException;
+    Page<CategoryDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword);
+    void update(UUID id, CategoryDTO categoryDTO);
+    void delete(UUID id);
 
     Category getCategoryFromDB(UUID id);
 

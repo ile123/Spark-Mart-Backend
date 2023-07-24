@@ -44,14 +44,14 @@ public class UserController {
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
 
-    @GetMapping("/find-by-email/{userEmail}")
+    /*@GetMapping("/find-by-email/{userEmail}")
     public ResponseEntity<UserDTO> GetUserByEmail(@PathVariable("userEmail") String email) {
         if(email.isEmpty() || email.isBlank()) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
         var user = userService.getUserByEmail(email);
         return new ResponseEntity<>(user, HttpStatus.OK);
-    }
+    }*/
 
     @PutMapping("/update-user/{userId}")
     public ResponseEntity<String> UpdateUser(@PathVariable("userId") UUID userId, @RequestBody UserDTO userDTO) {
