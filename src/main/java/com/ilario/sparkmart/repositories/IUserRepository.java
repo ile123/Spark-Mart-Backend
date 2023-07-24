@@ -26,5 +26,5 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
     Boolean doesAdministratorExist();
 
     @Query("SELECT x FROM User x WHERE (LOWER(x.firstName) LIKE %:keyword% OR LOWER(x.lastName) LIKE %:keyword% OR LOWER(x.email) LIKE %:keyword%) AND x.role = :role")
-    public Page<User> findAllByKeyword(@Param("role") Role role, @Param("keyword") String keyword, Pageable pageable);
+    Page<User> findAllByKeyword(@Param("role") Role role, @Param("keyword") String keyword, Pageable pageable);
 }

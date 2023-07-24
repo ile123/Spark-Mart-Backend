@@ -88,8 +88,8 @@ public class AddressServiceImpl implements IAddressService {
     }
 
     @Override
-    public void saveToDB(AddressDTO entity) {
-        var address = addressMapper.toAddress(entity);
+    public void saveToDB(AddressDTO addressDTO) {
+        var address = addressMapper.toAddress(addressDTO);
         var existingAddress = addressRepository.findAddressByStreetAddressAndCity(address.getStreetAddress(), address.getCity());
         if(existingAddress.isEmpty()) {
             addressRepository.save(address);
@@ -117,10 +117,4 @@ public class AddressServiceImpl implements IAddressService {
                 .toList();
         return new PageImpl<>(addressDTOs, pageable, pageResult.getTotalElements());
     }
-
-    @Override
-    public void update(UUID uuid, AddressDTO entity) { }
-
-    @Override
-    public void delete(UUID uuid) { }
 }

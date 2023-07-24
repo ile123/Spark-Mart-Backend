@@ -17,5 +17,5 @@ public interface IAddressRepository extends JpaRepository<Address, UUID> {
     Optional<Address> findAddressByStreetAddressAndCity(@Param("streetAddress") String streetAddress, @Param("city") String city);
 
     @Query("SELECT x FROM Address x WHERE LOWER(x.streetAddress) LIKE %:keyword% OR LOWER(x.city) LIKE %:keyword% OR LOWER(x.postalCode) LIKE %:keyword% OR LOWER(x.province) LIKE %:keyword% OR LOWER(x.country) LIKE %:keyword%")
-    public Page<Address> findAllByKeyword(@Param("keyword") String keyword, Pageable pageable);
+    Page<Address> findAllByKeyword(@Param("keyword") String keyword, Pageable pageable);
 }

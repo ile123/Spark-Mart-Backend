@@ -26,7 +26,7 @@ public class AuthenticationController {
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(
             @RequestBody RegisterRequest request) {
-        var existingUser = userService.checkIfEmailIsAlreadyUsed(request.getEmail());
+        var existingUser = userService.checkIfEmailIsAlreadyUsed(request.email());
         if(existingUser) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }

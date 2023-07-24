@@ -15,7 +15,6 @@ import com.ilario.sparkmart.security.misc.AuthenticationResponse;
 import com.ilario.sparkmart.security.misc.RegisterRequest;
 import com.ilario.sparkmart.security.misc.enums.Gender;
 import com.ilario.sparkmart.security.misc.enums.Role;
-import com.ilario.sparkmart.services.implementations.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,7 +28,6 @@ public class AuthenticationService {
     private final IUserRepository userRepository;
     private final IAddressRepository addressRepository;
     private final IWishlistRepository wishlistRepository;
-    private final UserServiceImpl userService;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
@@ -37,7 +35,7 @@ public class AuthenticationService {
     public AuthenticationResponse register(RegisterRequest request) {
         var existingAddress = addressRepository.findAddressByStreetAddressAndCity("", "");
         try {
-            var existingUser = userRepository.findByEmail(request.getEmail());
+            var existingUser = userRepository.findByEmail(request.email());
             if (existingUser.isPresent()) {
                 throw  new UserEmailAlreadyInUseException("ERROR: Email already in use!");
             }
@@ -58,21 +56,21 @@ public class AuthenticationService {
             var address = addressOptional.get();
             var wishlist = new Wishlist();
             var user = User.builder()
-                    .email(request.getEmail())
-                    .password(passwordEncoder.encode(request.getPassword()))
-                    .firstName(request.getFirstName())
-                    .lastName(request.getLastName())
-                    .phoneNumber(request.getPhoneNumber())
+                    .email(request.email())
+                    .password(passwordEncoder.encode(request.password()))
+                    .firstName(request.firstName())
+                    .lastName(request.lastName())
+                    .phoneNumber(request.phoneNumber())
                     .wishlist(wishlist)
                     .address(address)
                     .isDisabled(false)
                     .build();
-            switch (request.getRole().toUpperCase()) {
+            switch (request.role().toUpperCase()) {
                 case "CUSTOMER" -> user.setRole(Role.CUSTOMER);
                 case "EMPLOYEE" -> user.setRole(Role.EMPLOYEE);
                 default -> throw new RoleNotFoundException("ERROR: Role not found.");
             }
-            switch (request.getGender().toUpperCase()) {
+            switch (request.gender().toUpperCase()) {
                 case "MALE" -> user.setGender(Gender.MALE);
                 case "FEMALE" -> user.setGender(Gender.FEMALE);
                 default -> throw new GenderNotFoundException("ERROR: Gender not found.");
@@ -82,9 +80,7 @@ public class AuthenticationService {
             userRepository.save(user);
             wishlistRepository.save(wishlist);
             var jwtToken = jwtService.generateToken(user);
-            return AuthenticationResponse.builder()
-                    .token(jwtToken)
-                    .build();
+            return new AuthenticationResponse(jwtToken);
         } catch (UserEmailAlreadyInUseException | RoleNotFoundException | AddressNotFoundException | GenderNotFoundException exception) {
             System.out.println(exception.getMessage());
         }
@@ -94,15 +90,13 @@ public class AuthenticationService {
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
+                        request.email(),
+                        request.password()
                 )
         );
-        var user = userRepository.findByEmail(request.getEmail())
+        var user = userRepository.findByEmail(request.email())
                 .orElseThrow();
         var jwtToken = jwtService.generateToken(user);
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .build();
+        return new AuthenticationResponse(jwtToken);
     }
 }

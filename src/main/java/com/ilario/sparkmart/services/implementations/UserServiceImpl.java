@@ -117,28 +117,6 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public Page<UserDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) {
-        Pageable pageable = PageRequest.of(
-                page,
-                pageSize,
-                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        Page<User> pageResult;
-        if(keyword.isEmpty()) {
-            pageResult = userRepository.findAll(pageable);
-        }
-        else {
-            pageResult = userRepository.findAllByKeyword(null, keyword.toLowerCase(), pageable);
-        }
-        var userDTOs = pageResult
-                .getContent()
-                .stream()
-                .filter(User::isEnabled)
-                .map(userMapper::toUserDTO)
-                .toList();
-        return new PageImpl<>(userDTOs, pageable, pageResult.getTotalElements());
-    }
-
-    @Override
     public Page<UserDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String userType, String keyword) {
         Pageable pageable = PageRequest.of(
                 page,

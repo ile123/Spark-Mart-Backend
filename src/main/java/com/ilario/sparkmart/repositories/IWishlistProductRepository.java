@@ -1,6 +1,5 @@
 package com.ilario.sparkmart.repositories;
 
-import com.ilario.sparkmart.dto.ProductDTO;
 import com.ilario.sparkmart.models.Product;
 import com.ilario.sparkmart.models.Wishlist;
 import com.ilario.sparkmart.models.WishlistProduct;

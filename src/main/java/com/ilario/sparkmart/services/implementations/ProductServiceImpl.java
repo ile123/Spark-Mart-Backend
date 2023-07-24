@@ -4,7 +4,6 @@ import com.ilario.sparkmart.dto.DisplayProductDTO;
 import com.ilario.sparkmart.dto.ProductDTO;
 import com.ilario.sparkmart.exceptions.products.ProductNotFoundException;
 import com.ilario.sparkmart.mappers.ProductMapper;
-import com.ilario.sparkmart.models.Brand;
 import com.ilario.sparkmart.models.Product;
 import com.ilario.sparkmart.repositories.IBrandRepository;
 import com.ilario.sparkmart.repositories.ICategoryRepository;
@@ -48,9 +47,6 @@ public class ProductServiceImpl implements IProductService {
         }
         return null;
     }
-
-    @Override
-    public void saveToDB(ProductDTO entity) {}
 
     @Override
     public Page<ProductDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) {
@@ -170,7 +166,7 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public void saveProductToTheDB(MultipartFile image, String name,
+    public void saveToDB(MultipartFile image, String name,
                                    String description, String shortDescription, String specifications,
                                    Double price, Integer quantity,
                                    String brand, String category) throws IOException {

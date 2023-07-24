@@ -3,8 +3,6 @@ package com.ilario.sparkmart.controllers;
 import com.ilario.sparkmart.dto.*;
 import com.ilario.sparkmart.exceptions.users.UserNotFoundException;
 import com.ilario.sparkmart.mappers.OrderMapper;
-import com.ilario.sparkmart.models.Order;
-import com.ilario.sparkmart.models.WishlistProduct;
 import com.ilario.sparkmart.repositories.IUserRepository;
 import com.ilario.sparkmart.services.IOrderService;
 import com.ilario.sparkmart.services.IProductService;
@@ -15,8 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -59,6 +57,25 @@ public class CustomerController {
         return new ResponseEntity<>(pageResult, HttpStatus.OK);
     }
 
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable UUID orderId) {
+        var order = orderService.getById(orderId);
+        if(order == null) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(order, HttpStatus.OK);
+    }
+
+    @GetMapping("/all-products-by-order/{orderId}")
+    public ResponseEntity<List<OrderProductDTO>> getAllProductsByOrder(@PathVariable UUID orderId) {
+        var order = orderService.getById(orderId);
+        if(order == null) {
+            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.BAD_REQUEST);
+        }
+        var products = orderService.getAllProductsByOrder(orderId);
+        return new ResponseEntity<>(products, HttpStatus.OK);
+    }
+
     @PostMapping("/addedToWishlist")
     public ResponseEntity<Boolean> checkIfAlreadyAddedToWishlist(@RequestBody WishlistDTO wishlistDTO) {
         var user = userService.getById(wishlistDTO.userId());
@@ -94,6 +111,26 @@ public class CustomerController {
         }
         orderService.savePurchase(purchaseDTO);
         return new ResponseEntity<>("Purchase created successfully", HttpStatus.OK);
+    }
+
+    @PatchMapping("/change-order-status/{orderId}")
+    public ResponseEntity<String> changeOrderStatus(@PathVariable UUID orderId) {
+        var order = orderService.getById(orderId);
+        if(order == null) {
+            return new ResponseEntity<>("ERROR: Order not found!", HttpStatus.BAD_REQUEST);
+        }
+        orderService.changeOrderStatus(orderId);
+        return new ResponseEntity<>("Order status changed successfully!", HttpStatus.OK);
+    }
+
+    @PatchMapping("/change-product-order-status/{orderProductId}")
+    public ResponseEntity<String> changeOrderProductStatus(@PathVariable UUID orderProductId) {
+        var orderProduct = orderService.getOrderProductByID(orderProductId);
+        if(orderProduct.isEmpty()) {
+            return new ResponseEntity<>("ERROR: Could not find order or product!", HttpStatus.BAD_REQUEST);
+        }
+        orderService.changeOrderProductStatus(orderProduct.get().getOrder().getId(), orderProduct.get().getProduct().getId());
+        return new ResponseEntity<>("Order status changed successfully", HttpStatus.OK);
     }
 
 }

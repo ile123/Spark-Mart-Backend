@@ -2,7 +2,6 @@ package com.ilario.sparkmart.repositories;
 
 import com.ilario.sparkmart.models.Order;
 import com.ilario.sparkmart.models.User;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
