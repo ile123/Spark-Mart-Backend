@@ -27,7 +27,6 @@ public class ImageController {
                 .getParentFile()
                 .getParentFile()
                 .getParentFile();
-
         Path pathToPicture = Paths.get(photoDir.getAbsolutePath() + File.separator + "SparkMartPhotos" + File.separator + uploadDir);
         File imageFile = new File(pathToPicture.toAbsolutePath() + File.separator + imageName);
         return new FileSystemResource(imageFile.getAbsolutePath());

@@ -48,11 +48,7 @@ public class AuthenticationController {
     public ResponseEntity<Boolean> doesEmailExist(@RequestBody String request) {
         var jsonObject = new JSONObject(request);
         var emailExist = userService.checkIfEmailIsAlreadyUsed(jsonObject.get("email").toString());
-        if(emailExist) {
-            return new ResponseEntity<>(true, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(false, HttpStatus.OK);
-        }
+        return ResponseEntity.ok(emailExist);
     }
 
     @GetMapping("/get-user-info")
@@ -70,6 +66,6 @@ public class AuthenticationController {
     @GetMapping("/does-administrator-exist")
     public ResponseEntity<Boolean> doesAdministratorExist() {
         var response = userService.doesAdministratorExist();
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 }

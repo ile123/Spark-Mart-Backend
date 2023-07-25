@@ -3,6 +3,7 @@ package com.ilario.sparkmart.services.implementations;
 import com.ilario.sparkmart.dto.BrandDTO;
 import com.ilario.sparkmart.dto.DisplayBrandDTO;
 import com.ilario.sparkmart.exceptions.brands.BrandNotFoundException;
+import com.ilario.sparkmart.exceptions.brands.BrandsNotFoundException;
 import com.ilario.sparkmart.mappers.BrandMapper;
 import com.ilario.sparkmart.models.Brand;
 import com.ilario.sparkmart.repositories.IBrandRepository;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class BrandServiceImpl implements IBrandService {
@@ -29,100 +31,89 @@ public class BrandServiceImpl implements IBrandService {
     }
 
     @Override
-    public BrandDTO getById(UUID uuid) {
-        try {
-            var brand = brandRepository.findById(uuid);
-            if(brand.isEmpty()) {
-                throw new BrandNotFoundException("ERROR: Brand not found by given ID!");
-            }
-            return brandMapper.toBrandDTO(brand.get());
-        } catch (BrandNotFoundException exception) {
-            System.out.println(exception.getMessage());
+    public BrandDTO getById(UUID uuid) throws BrandNotFoundException {
+        var brand = brandRepository.findById(uuid);
+        if(brand.isEmpty()) {
+            throw new BrandNotFoundException("ERROR: Brand not found.");
         }
-        return null;
+        return brandMapper.toBrandDTO(brand.get());
     }
 
     @Override
-    public Page<BrandDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) {
-        Pageable pageable = PageRequest.of(
+    public Page<BrandDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) throws BrandsNotFoundException {
+        var pageable = PageRequest.of(
                 page,
                 pageSize,
                 sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        Page<Brand> pageResult;
-        if(keyword.isEmpty()) {
-            pageResult = brandRepository.findAll(pageable);
-        } else {
-            pageResult = brandRepository.findAllByKeyword(keyword, pageable);
+        var pageResult = keyword.isEmpty() ?
+                brandRepository.findAll(pageable) :
+                brandRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
+        if(pageResult.isEmpty()) {
+            throw new BrandsNotFoundException("ERROR: Brands not found.");
         }
         var brandsDTO = pageResult
                 .getContent()
                 .stream()
                 .filter(Brand::isEnabled)
                 .map(brandMapper::toBrandDTO)
-                .toList();
+                .collect(Collectors.toList());
         return new PageImpl<>(brandsDTO, pageable, pageResult.getTotalElements());
     }
 
     @Override
-    public void update(UUID uuid, BrandDTO entity) {
-        if(!brandRepository.existsById(uuid)) return;
-        var brand = brandRepository.getReferenceById(uuid);
-        brand.setName(entity.name());
-        brand.setPicture(entity.imageName());
-        brandRepository.save(brand);
-    }
-
-    @Override
-    public void delete(UUID uuid) {
-        var brand = brandRepository.findById(uuid);
-        if(brand.isEmpty()) {
-            return;
-        }
-        if(!brand.get().getProducts().isEmpty()) {
-            for(var product : brand.get().getProducts()) {
-                product.setIsDisabled(true);
-            }
-            brand.get().setDisabled(true);
-            brandRepository.save(brand.get());
-            return;
-        }
-        brandRepository.delete(brand.get());
-    }
-
-    @Override
-    public void saveToDB(MultipartFile image, String name) throws IOException {
-        var brand = new Brand();
-        brand.setName(name);
-        String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
-        brand.setPicture(newFileName);
-        String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-        FileUploadUtil.saveFile("brand-photos", fileName, image);
-        brandRepository.save(brand);
-    }
-
-    @Override
-    public Brand getBrandFromDB(UUID id) {
-        return brandRepository.getReferenceById(id);
-    }
-
-    @Override
-    public Page<DisplayBrandDTO> getAllDisplayBrands(int page, int pageSize, String sortBy, String sortDir, String keyword) {
-        Pageable pageable = PageRequest.of(
+    public Page<DisplayBrandDTO> getAllDisplayBrands(int page, int pageSize, String sortBy, String sortDir, String keyword) throws BrandsNotFoundException {
+        var pageable = PageRequest.of(
                 page,
                 pageSize,
                 sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        Page<Brand> pageResult;
-        if(keyword.isEmpty()) {
-            pageResult = brandRepository.findAll(pageable);
-        } else {
-            pageResult = brandRepository.findAllByKeyword(keyword, pageable);
+        var pageResult = keyword.isEmpty() ?
+                brandRepository.findAll(pageable) :
+                brandRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
+        if(pageResult.isEmpty()) {
+            throw new BrandsNotFoundException("ERROR: Brands not found.");
         }
         var brandsDTO = pageResult
                 .getContent()
                 .stream()
                 .filter(Brand::isEnabled)
                 .map(brandMapper::toDisplayBrandDTO)
-                .toList();
+                .collect(Collectors.toList());
         return new PageImpl<>(brandsDTO, pageable, pageResult.getTotalElements());
+    }
+
+    @Override
+    public void update(UUID uuid, BrandDTO entity) throws BrandNotFoundException {
+        var brand = brandRepository
+                .findById(uuid)
+                .orElseThrow(() -> new BrandNotFoundException("Brand with the given ID not found."));
+        brand.setName(entity.name());
+        brand.setPicture(entity.imageName());
+        brandRepository.save(brand);
+    }
+
+    @Override
+    public void delete(UUID uuid) throws BrandNotFoundException {
+        var brand = brandRepository.findById(uuid)
+                .orElseThrow(() -> new BrandNotFoundException("Brand with the given ID not found."));
+        if (!brand.getProducts().isEmpty()) {
+            brand.getProducts().forEach(product -> product.setIsDisabled(true));
+            brand.setDisabled(true);
+            brandRepository.save(brand);
+        } else {
+            brandRepository.delete(brand);
+        }
+    }
+
+    @Override
+    public void saveToDB(MultipartFile image, String name) throws IOException {
+        String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
+        String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
+        FileUploadUtil.saveFile("brand-photos", fileName, image);
+        var brand = Brand
+                .builder()
+                .name(name)
+                .picture(newFileName)
+                .build();
+        brandRepository.save(brand);
     }
 }

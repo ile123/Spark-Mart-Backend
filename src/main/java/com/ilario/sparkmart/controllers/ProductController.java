@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -36,7 +37,7 @@ public class ProductController {
                                                                          @RequestParam(defaultValue = "asc") String sortDir,
                                                                          @RequestParam(defaultValue = "") String keyword) {
         var allProducts = productService.getAllDisplayProducts(page, pageSize, sortBy, sortDir, keyword);
-        return new ResponseEntity<>(allProducts, HttpStatus.OK);
+        return allProducts.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(allProducts);
     }
 
     @GetMapping("/brand/{brand}")
@@ -47,7 +48,7 @@ public class ProductController {
                                                                                 @RequestParam(defaultValue = "") String keyword,
                                                                                 @PathVariable("brand") String brand) {
         var allProducts = productService.getAllDisplayProductsByBrand(page, pageSize, sortBy, sortDir, keyword, brand);
-        return new ResponseEntity<>(allProducts, HttpStatus.OK);
+        return allProducts.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(allProducts);
     }
 
     @GetMapping("/category/{category}")
@@ -58,26 +59,28 @@ public class ProductController {
                                                                                 @RequestParam(defaultValue = "") String keyword,
                                                                                 @PathVariable("category") String category) {
         var allProducts = productService.getAllDisplayProductsByCategory(page, pageSize, sortBy, sortDir, keyword, category);
-        return new ResponseEntity<>(allProducts, HttpStatus.OK);
+        return allProducts.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(allProducts);
     }
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDTO> GetProduct(@PathVariable("productId") UUID productId) {
-        var product = productService.getById(productId);
+        var product = Optional.of(productService.getById(productId));
         if (product == null) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            return ResponseEntity.notFound().build();
         }
-        return new ResponseEntity<>(product, HttpStatus.OK);
+        return product.map(x-> ResponseEntity.ok(x))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/product-information/{productId}")
     public ResponseEntity<ProductStatisticsDTO> GetProductStatistic(@PathVariable("productId") UUID productId) {
-        var product = productService.getProductFromDB(productId);
-        if(product == null) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        var product = Optional.of(productService.getProductFromDB(productId));
+        if(product.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
-        var productStats = orderService.getProductStatistics(productId);
-        return new ResponseEntity<>(productStats, HttpStatus.OK);
+        var productStats = Optional.of(orderService.getProductStatistics(productId));
+        return productStats.map(x-> ResponseEntity.ok(x))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("")
@@ -86,7 +89,7 @@ public class ProductController {
                                               @RequestParam("price") Double price, @RequestParam("quantity") Integer quantity, @RequestParam("specifications") String specifications,
                                               @RequestParam("brand") String brand, @RequestParam("category") String category) throws IOException {
         productService.saveToDB(image, name, description, shortDescription, specifications, price, quantity, brand, category);
-        return ResponseEntity.ok("Product saved successfully");
+        return ResponseEntity.status(HttpStatus.CREATED).body("Product saved successfully");
     }
 
     @PutMapping("/{productId}")
@@ -94,29 +97,30 @@ public class ProductController {
                                                 @RequestParam("description") String description, @RequestParam("shortDescription") String shortDescription, @RequestParam("specifications") String specifications,
                                                 @RequestParam("price") Double price, @RequestParam("quantity") Integer quantity,
                                                 @RequestParam("brand") String brand, @RequestParam("category") String category) throws IOException {
-        var product = productService.getById(productId);
-        if (product == null) {
-            return new ResponseEntity<>("ERROR: Product not found!", HttpStatus.NOT_FOUND);
+        var product = Optional.of(productService.getById(productId));
+        if (product.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
         FileUploadUtil.saveFile("product-photos", fileName, image);
+
         productService.update(productId, new ProductDTO(
                 productId, name,
                 description, shortDescription,
                 specifications, price,
                 newFileName, quantity,
                 brand, category));
-        return new ResponseEntity<>("Product successfully updated!", HttpStatus.OK);
+        return ResponseEntity.ok("Product successfully updated!");
     }
 
     @DeleteMapping("/{productId}")
     public ResponseEntity<String> DeleteProduct(@PathVariable("productId") UUID productId) {
-        var product = productService.getProductFromDB(productId);
-        if (product == null) {
-            return new ResponseEntity<>("ERROR: Product not found!", HttpStatus.NOT_FOUND);
+        var product = Optional.of(productService.getById(productId));
+        if (product.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
         productService.delete(productId);
-        return new ResponseEntity<>("Product deleted successfully!", HttpStatus.OK);
+        return ResponseEntity.ok("Product deleted successfully.");
     }
 }

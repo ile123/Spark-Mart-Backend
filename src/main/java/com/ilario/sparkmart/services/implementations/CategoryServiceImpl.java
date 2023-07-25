@@ -2,6 +2,7 @@ package com.ilario.sparkmart.services.implementations;
 
 import com.ilario.sparkmart.dto.CategoryDTO;
 import com.ilario.sparkmart.dto.DisplayCategoryDTO;
+import com.ilario.sparkmart.exceptions.categories.CategoriesNotFoundException;
 import com.ilario.sparkmart.exceptions.categories.CategoryNotFoundException;
 import com.ilario.sparkmart.mappers.CategoryMapper;
 import com.ilario.sparkmart.models.Category;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryServiceImpl implements ICategoryService {
@@ -29,44 +31,61 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
-    public CategoryDTO getById(UUID uuid) {
-        try {
-            var category = categoryRepository.findById(uuid);
-            if(category.isEmpty()) {
-                throw new CategoryNotFoundException("ERROR: Category not found by given ID!");
-            }
-            return categoryMapper.toCategoryDTO(category.get());
-        } catch (CategoryNotFoundException exception) {
-            System.out.println(exception.getMessage());
+    public CategoryDTO getById(UUID uuid) throws CategoryNotFoundException {
+        var category = categoryRepository.findById(uuid);
+        if(category.isEmpty()) {
+            throw new CategoryNotFoundException("ERROR: Category by given ID not found.");
         }
-        return null;
+        return categoryMapper.toCategoryDTO(category.get());
     }
 
     @Override
-    public Page<CategoryDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) {
-        Pageable pageable = PageRequest.of(
+    public Page<CategoryDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) throws CategoriesNotFoundException {
+        var pageable = PageRequest.of(
                 page,
                 pageSize,
                 sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        Page<Category> pageResult;
-        if(keyword.isEmpty()) {
-            pageResult = categoryRepository.findAll(pageable);
-        } else {
-            pageResult = categoryRepository.findAllByKeyword(keyword, pageable);
+        var pageResult = keyword.isEmpty() ?
+                categoryRepository.findAll(pageable) :
+                categoryRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
+        if(pageResult.isEmpty()) {
+            throw new CategoriesNotFoundException("ERROR: Categories not found.");
         }
         var categoriesDTO = pageResult
                 .getContent()
                 .stream()
                 .filter(Category::isEnabled)
                 .map(categoryMapper::toCategoryDTO)
-                .toList();
+                .collect(Collectors.toList());
         return new PageImpl<>(categoriesDTO, pageable, pageResult.getTotalElements());
     }
 
     @Override
-    public void update(UUID uuid, CategoryDTO entity) {
-        if(!categoryRepository.existsById(uuid)) return;
-        var category = categoryRepository.getReferenceById(uuid);
+    public Page<DisplayCategoryDTO> getAllCategoryDisplays(int page, int pageSize, String sortBy, String sortDir, String keyword) throws CategoriesNotFoundException {
+        var pageable = PageRequest.of(
+                page,
+                pageSize,
+                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
+        var pageResult = keyword.isEmpty() ?
+                categoryRepository.findAll(pageable) :
+                categoryRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
+        if(pageResult.isEmpty()) {
+            throw new CategoriesNotFoundException("ERROR: Categories not found.");
+        }
+        var categoriesDTO = pageResult
+                .getContent()
+                .stream()
+                .filter(Category::isEnabled)
+                .map(categoryMapper::toDisplayCategoryDTO)
+                .collect(Collectors.toList());
+        return new PageImpl<>(categoriesDTO, pageable, pageResult.getTotalElements());
+    }
+
+    @Override
+    public void update(UUID uuid, CategoryDTO entity) throws CategoryNotFoundException {
+        var category = categoryRepository
+                .findById(uuid)
+                .orElseThrow(() -> new CategoryNotFoundException("ERROR: Category by given ID not found."));
         category.setName(entity.name());
         category.setDescription(entity.description());
         category.setPicture(entity.imageName());
@@ -74,57 +93,30 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
-    public void delete(UUID uuid) {
-        var category = categoryRepository.findById(uuid);
-        if(category.isEmpty()) {
-            return;
+    public void delete(UUID uuid) throws CategoryNotFoundException{
+        var category = categoryRepository
+                .findById(uuid)
+                .orElseThrow(() -> new CategoryNotFoundException("Category with the given ID not found."));
+        if (!category.getProducts().isEmpty()) {
+            category.getProducts().forEach(product -> product.setIsDisabled(true));
+            category.setDisabled(true);
+            categoryRepository.save(category);
+        } else {
+            categoryRepository.delete(category);
         }
-        if(!category.get().getProducts().isEmpty()) {
-            for(var product : category.get().getProducts()) {
-                product.setIsDisabled(true);
-            }
-            category.get().setDisabled(true);
-            categoryRepository.save(category.get());
-            return;
-        }
-        categoryRepository.delete(category.get());
     }
 
     @Override
     public void saveToDB(MultipartFile image, String name, String description) throws IOException {
-        var category = new Category();
-        category.setName(name);
-        category.setDescription(description);
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
-        category.setPicture(newFileName);
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
         FileUploadUtil.saveFile("category-photos", fileName, image);
+        var category = Category
+                .builder()
+                .name(name)
+                .description(description)
+                .picture(newFileName)
+                .build();
         categoryRepository.save(category);
-    }
-
-    @Override
-    public Category getCategoryFromDB(UUID id) {
-        return categoryRepository.getReferenceById(id);
-    }
-
-    @Override
-    public Page<DisplayCategoryDTO> getAllCategoryDisplays(int page, int pageSize, String sortBy, String sortDir, String keyword) {
-        Pageable pageable = PageRequest.of(
-                page,
-                pageSize,
-                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        Page<Category> pageResult;
-        if(keyword.isEmpty()) {
-            pageResult = categoryRepository.findAll(pageable);
-        } else {
-            pageResult = categoryRepository.findAllByKeyword(keyword, pageable);
-        }
-        var categoriesDTO = pageResult
-                .getContent()
-                .stream()
-                .filter(Category::isEnabled)
-                .map(categoryMapper::toDisplayCategoryDTO)
-                .toList();
-        return new PageImpl<>(categoriesDTO, pageable, pageResult.getTotalElements());
     }
 }

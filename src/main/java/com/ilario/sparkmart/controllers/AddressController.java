@@ -2,13 +2,14 @@ package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.AddressDTO;
 import com.ilario.sparkmart.dto.UserDTO;
+import com.ilario.sparkmart.exceptions.addresses.AddressNotFoundException;
+import com.ilario.sparkmart.exceptions.addresses.AddressesNotFoundException;
 import com.ilario.sparkmart.services.implementations.AddressServiceImpl;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 @RestController
@@ -27,29 +28,34 @@ public class AddressController {
                 @RequestParam(defaultValue = "streetAddress") String sortBy,
                 @RequestParam(defaultValue = "asc") String sortDir,
                 @RequestParam(defaultValue = "") String keyword) {
-        var addresses = addressService.getAll(page, pageSize, sortBy, sortDir, keyword);
-        if(addresses.isEmpty()) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        try {
+            var addresses = addressService.getAll(page, pageSize, sortBy, sortDir, keyword);
+            return ResponseEntity.ok(addresses);
+        } catch (AddressesNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
-        return new ResponseEntity<>(addresses, HttpStatus.OK);
     }
 
     @GetMapping("/{addressId}")
     public ResponseEntity<AddressDTO> GetAddress(@PathVariable UUID addressId) {
-        var address = addressService.getById(addressId);
-        return new ResponseEntity<>(address, HttpStatus.OK);
+        try {
+            var address = addressService.getById(addressId);
+            return ResponseEntity.ok(address);
+        } catch (AddressNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("")
     public ResponseEntity<String> SaveAddress(@RequestBody AddressDTO addressDTO) {
-        if(addressDTO == null) {
-            return new ResponseEntity<>("Could not save Address!", HttpStatus.INTERNAL_SERVER_ERROR);
+        if (addressDTO == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("ERROR: Could not save address to the DB.");
         }
-        if(addressService.addressExists(addressDTO)) {
-            return new ResponseEntity<>("ERROR: Address already exists!", HttpStatus.BAD_REQUEST);
+        if (addressService.addressExists(addressDTO)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ERROR: Address already exists.");
         }
         addressService.saveToDB(addressDTO);
-        return new ResponseEntity<>("Address successfully saved successfully!", HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Address saved successfully");
     }
 
     @GetMapping("/get-all-users-by-address/{addressId}")
@@ -58,15 +64,15 @@ public class AddressController {
                                               @RequestParam(defaultValue = "10") int pageSize,
                                               @RequestParam(defaultValue = "firstName") String sortBy,
                                               @RequestParam(defaultValue = "asc") String sortDir) {
-        var address = addressService.getById(addressId);
-        Pageable pageable = PageRequest.of(
-                page,
-                pageSize,
-                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        if(address == null) {
-            return new ResponseEntity<>(new PageImpl<>(new ArrayList<UserDTO>(), pageable, 0), HttpStatus.OK);
+        try {
+            Pageable pageable = PageRequest.of(
+                    page,
+                    pageSize,
+                    sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
+            var users = addressService.getAllUsersByAddress(addressId, pageable);
+            return ResponseEntity.ok(users);
+        } catch (AddressNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
-        var users = addressService.getAllUsersByAddress(addressId, pageable);
-        return new ResponseEntity<>(users, HttpStatus.OK);
     }
 }
