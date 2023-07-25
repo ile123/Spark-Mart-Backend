@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -44,8 +45,8 @@ public class CustomerController {
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "orderNO") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        var pageResult = orderService.getAllOrdersByUser(userId, page, pageSize, sortBy, sortDir);
-        return new ResponseEntity<>(pageResult, HttpStatus.OK);
+        var allOrders = orderService.getAllOrdersByUser(userId, page, pageSize, sortBy, sortDir);
+        return allOrders.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(allOrders);
     }
 
     @GetMapping("/wishlists/{userId}")
@@ -53,84 +54,85 @@ public class CustomerController {
     @PathVariable UUID userId,
     @RequestParam(defaultValue = "0") int page,
     @RequestParam(defaultValue = "10") int pageSize) {
-        var pageResult = orderService.getAllWishlistsByUser(userId, page, pageSize);
-        return new ResponseEntity<>(pageResult, HttpStatus.OK);
+        var allWishlists = orderService.getAllWishlistsByUser(userId, page, pageSize);
+        return allWishlists.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(allWishlists);
     }
 
     @GetMapping("/order/{orderId}")
     public ResponseEntity<OrderDTO> getOrderById(@PathVariable UUID orderId) {
-        var order = orderService.getById(orderId);
-        if(order == null) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        var order = Optional.of(orderService.getById(orderId));
+        if(order.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
-        return new ResponseEntity<>(order, HttpStatus.OK);
+        return order.map(x-> ResponseEntity.ok(x))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/all-products-by-order/{orderId}")
     public ResponseEntity<List<OrderProductDTO>> getAllProductsByOrder(@PathVariable UUID orderId) {
-        var order = orderService.getById(orderId);
-        if(order == null) {
-            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.BAD_REQUEST);
+        var order = Optional.of(orderService.getById(orderId));
+        if(order.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
-        var products = orderService.getAllProductsByOrder(orderId);
-        return new ResponseEntity<>(products, HttpStatus.OK);
+        var allProducts = orderService.getAllProductsByOrder(orderId);
+        return allProducts.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(allProducts);
     }
 
     @PostMapping("/addedToWishlist")
     public ResponseEntity<Boolean> checkIfAlreadyAddedToWishlist(@RequestBody WishlistDTO wishlistDTO) {
-        var user = userService.getById(wishlistDTO.userId());
-        if(user == null) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        var user = Optional.of(userService.getById(wishlistDTO.userId()));
+        if(user.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
-        var product = productService.getProductFromDB(wishlistDTO.productId());
-        if(product == null) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        var product = Optional.of(productService.getById(wishlistDTO.productId()));
+        if(product.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
         var result = wishlistService.checkIfWishlistWasAlreadyAdded(wishlistDTO);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/wishlist")
     public ResponseEntity<String> saveOrRemoveUserWishlist(@RequestBody WishlistDTO wishlistDTO) {
-        var user = userService.getById(wishlistDTO.userId());
-        if(user == null) {
-            return new ResponseEntity<>("ERROR: User dose not exist!", HttpStatus.BAD_REQUEST);
+        var user = Optional.of(userService.getById(wishlistDTO.userId()));
+        if(user.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
-        var product = productService.getProductFromDB(wishlistDTO.productId());
-        if(product == null) {
-            return new ResponseEntity<>("ERROR: Product dose not exist!", HttpStatus.BAD_REQUEST);
+        var product = Optional.of(productService.getProductFromDB(wishlistDTO.productId()));
+        if(product.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
         wishlistService.saveOrRemoveProductWishlist(wishlistDTO);
-        return new ResponseEntity<>("Wishlist added or removed successfully!", HttpStatus.OK);
+        return ResponseEntity.ok("Wishlist added or removed successfully!");
     }
 
     @PostMapping("/purchase")
     public ResponseEntity<String> customerPurchaseProducts(@RequestBody PurchaseDTO purchaseDTO) throws UserNotFoundException {
         if(purchaseDTO.products().isEmpty()) {
-            return new ResponseEntity<>("ERROR: Empty purchase JSON!", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().build();
         }
         orderService.savePurchase(purchaseDTO);
-        return new ResponseEntity<>("Purchase created successfully", HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Order saved successfully");
     }
 
     @PatchMapping("/change-order-status/{orderId}")
     public ResponseEntity<String> changeOrderStatus(@PathVariable UUID orderId) {
-        var order = orderService.getById(orderId);
-        if(order == null) {
-            return new ResponseEntity<>("ERROR: Order not found!", HttpStatus.BAD_REQUEST);
+        var order = Optional.of(orderService.getById(orderId));
+        if(order.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
         orderService.changeOrderStatus(orderId);
-        return new ResponseEntity<>("Order status changed successfully!", HttpStatus.OK);
+        return ResponseEntity.ok("Order status changed successfully!");
     }
 
     @PatchMapping("/change-product-order-status/{orderProductId}")
     public ResponseEntity<String> changeOrderProductStatus(@PathVariable UUID orderProductId) {
         var orderProduct = orderService.getOrderProductByID(orderProductId);
         if(orderProduct.isEmpty()) {
-            return new ResponseEntity<>("ERROR: Could not find order or product!", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().build();
         }
         orderService.changeOrderProductStatus(orderProduct.get().getOrder().getId(), orderProduct.get().getProduct().getId());
-        return new ResponseEntity<>("Order status changed successfully", HttpStatus.OK);
+        return ResponseEntity.ok("Order status changed successfully");
     }
 
 }

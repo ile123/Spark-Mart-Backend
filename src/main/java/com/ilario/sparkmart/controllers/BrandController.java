@@ -2,6 +2,8 @@ package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.BrandDTO;
 import com.ilario.sparkmart.dto.DisplayBrandDTO;
+import com.ilario.sparkmart.exceptions.brands.BrandNotFoundException;
+import com.ilario.sparkmart.exceptions.brands.BrandsNotFoundException;
 import com.ilario.sparkmart.services.IBrandService;
 import com.ilario.sparkmart.utility.FileUploadUtil;
 import org.springframework.data.domain.Page;
@@ -32,60 +34,76 @@ public class BrandController {
                                                              @RequestParam(defaultValue = "name") String sortBy,
                                                              @RequestParam(defaultValue = "asc") String sortDir,
                                                              @RequestParam(defaultValue = "") String keyword) {
-        var allBrands = brandService.getAll(page, pageSize, sortBy, sortDir, keyword);
-        return new ResponseEntity<>(allBrands, HttpStatus.OK);
-    }
-
-    @GetMapping("/{brandId}")
-    public ResponseEntity<BrandDTO> GetBrand(@PathVariable("brandId") UUID brandId) {
-        var brand = brandService.getById(brandId);
-        if(brand == null) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        try {
+            var allBrands = brandService.getAll(page, pageSize, sortBy, sortDir, keyword);
+            return ResponseEntity.ok(allBrands);
+        } catch (BrandsNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
-        return new ResponseEntity<>(brand, HttpStatus.OK);
     }
 
     @GetMapping("/get-all-brand-displays")
     public ResponseEntity<Page<DisplayBrandDTO>> GetAllDisplayBrands(@RequestParam(defaultValue = "0") int page,
-                                                                         @RequestParam(defaultValue = "10") int pageSize,
-                                                                         @RequestParam(defaultValue = "name") String sortBy,
-                                                                         @RequestParam(defaultValue = "asc") String sortDir,
-                                                                         @RequestParam(defaultValue = "") String keyword) {
-        var allDisplays = brandService.getAllDisplayBrands(page, pageSize, sortBy, sortDir, keyword);
-        return new ResponseEntity<>(allDisplays, HttpStatus.OK);
+                                                                     @RequestParam(defaultValue = "10") int pageSize,
+                                                                     @RequestParam(defaultValue = "name") String sortBy,
+                                                                     @RequestParam(defaultValue = "asc") String sortDir,
+                                                                     @RequestParam(defaultValue = "") String keyword) {
+        try {
+            var allBrands = brandService.getAllDisplayBrands(page ,pageSize, sortBy, sortDir, keyword);
+            return ResponseEntity.ok(allBrands);
+        } catch (BrandsNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{brandId}")
+    public ResponseEntity<BrandDTO> GetBrand(@PathVariable("brandId") UUID brandId) {
+        try {
+            var brand = brandService.getById(brandId);
+            return ResponseEntity.ok(brand);
+        } catch (BrandNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("")
-    public ResponseEntity<String> SaveBrand(@RequestParam("image") MultipartFile image, @RequestParam("name") String name) throws IOException {
-        brandService.saveToDB(image, name);
-        return ResponseEntity.ok("Brand saved successfully");
+    public ResponseEntity<String> SaveBrand(@RequestParam("image") MultipartFile image, @RequestParam("name") String name) {
+        try {
+            brandService.saveToDB(image, name);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Brand saved successfully");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ERROR: Brand not saved.");
+        }
     }
 
     @PutMapping("/{brandId}")
-    public ResponseEntity<String> UpdateBrand(@PathVariable("brandId") UUID brandId, @RequestParam("image") MultipartFile image, @RequestParam("name") String name) throws IOException {
-        var brand = brandService.getById(brandId);
-        if(brand == null) {
-            return new ResponseEntity<>("ERROR: Brand not found!", HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<String> UpdateBrand(@PathVariable("brandId") UUID brandId,
+                                              @RequestParam("image") MultipartFile image,
+                                              @RequestParam("name") String name) {
         try {
-            Files.delete(Path.of("src/main/resources/images/brand-photos" + brand.imageName()));
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+            var brand = brandService.getById(brandId);
+
+            Files.delete(Path.of("src/main/resources/images/brand-photos/" + brand.imageName()));
+            String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
+            String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
+            FileUploadUtil.saveFile("brand-photos", fileName, image);
+
+            brandService.update(brandId, new BrandDTO(brandId, name, newFileName));
+            return ResponseEntity.ok("Brand successfully updated!");
+        } catch (BrandNotFoundException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
         }
-        String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
-        String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-        FileUploadUtil.saveFile("brand-photos", fileName, image);
-        brandService.update(brandId, new BrandDTO(brandId, name, newFileName));
-        return new ResponseEntity<>("Brand successfully updated!", HttpStatus.OK);
     }
 
     @DeleteMapping("/{brandId}")
     public ResponseEntity<String> DeleteBrand(@PathVariable("brandId") UUID brandId) {
-        var brand = brandService.getBrandFromDB(brandId);
-        if(brand == null) {
-            return new ResponseEntity<>("ERROR: Brand not found!", HttpStatus.NOT_FOUND);
+        try {
+            brandService.delete(brandId);
+            return ResponseEntity.ok("Brand deleted successfully.");
+        } catch (BrandNotFoundException e) {
+            return ResponseEntity.badRequest().build();
         }
-        brandService.delete(brandId);
-        return new ResponseEntity<>("Brand deleted successfully!", HttpStatus.OK);
     }
  }

@@ -3,6 +3,7 @@ package com.ilario.sparkmart.services.implementations;
 import com.ilario.sparkmart.dto.AddressDTO;
 import com.ilario.sparkmart.dto.UserDTO;
 import com.ilario.sparkmart.exceptions.addresses.AddressCouldNotBeMappedException;
+import com.ilario.sparkmart.exceptions.addresses.AddressNotFoundException;
 import com.ilario.sparkmart.exceptions.users.UserNotFoundException;
 import com.ilario.sparkmart.mappers.UserMapper;
 import com.ilario.sparkmart.models.User;
@@ -67,7 +68,7 @@ public class UserServiceImpl implements IUserService {
                 address.getUsers().add(user);
                 userRepository.save(user);
             }
-        } catch (AddressCouldNotBeMappedException | UserNotFoundException exception) {
+        } catch (AddressCouldNotBeMappedException | UserNotFoundException | AddressNotFoundException exception) {
                 System.out.println(exception.getMessage());
         }
     }

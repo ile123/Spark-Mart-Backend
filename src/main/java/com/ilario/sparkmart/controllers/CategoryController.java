@@ -2,6 +2,8 @@ package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.CategoryDTO;
 import com.ilario.sparkmart.dto.DisplayCategoryDTO;
+import com.ilario.sparkmart.exceptions.categories.CategoriesNotFoundException;
+import com.ilario.sparkmart.exceptions.categories.CategoryNotFoundException;
 import com.ilario.sparkmart.services.ICategoryService;
 import com.ilario.sparkmart.utility.FileUploadUtil;
 import org.springframework.data.domain.Page;
@@ -32,60 +34,74 @@ public class CategoryController {
                                                           @RequestParam(defaultValue = "name") String sortBy,
                                                           @RequestParam(defaultValue = "asc") String sortDir,
                                                           @RequestParam(defaultValue = "") String keyword) {
-        var allCategories = categoryService.getAll(page, pageSize, sortBy, sortDir, keyword);
-        return new ResponseEntity<>(allCategories, HttpStatus.OK);
+        try {
+            var allCategories = categoryService.getAll(page, pageSize, sortBy, sortDir, keyword);
+            return ResponseEntity.ok(allCategories);
+        } catch (CategoriesNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/get-all-category-displays")
-    public ResponseEntity<Page<DisplayCategoryDTO>> GetAllDisplayBrands(@RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<Page<DisplayCategoryDTO>> GetAllDisplayCategories(@RequestParam(defaultValue = "0") int page,
                                                                             @RequestParam(defaultValue = "10") int pageSize,
                                                                             @RequestParam(defaultValue = "name") String sortBy,
                                                                             @RequestParam(defaultValue = "asc") String sortDir,
                                                                             @RequestParam(defaultValue = "") String keyword) {
-        var allDisplays = categoryService.getAllCategoryDisplays(page, pageSize, sortBy, sortDir, keyword);
-        return new ResponseEntity<>(allDisplays, HttpStatus.OK);
+        try {
+            var allCategories = categoryService.getAllCategoryDisplays(page, pageSize, sortBy, sortDir, keyword);
+            return ResponseEntity.ok(allCategories);
+        } catch (CategoriesNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/{categoryId}")
     public ResponseEntity<CategoryDTO> GetCategory(@PathVariable("categoryId") UUID brandId) {
-        var category = categoryService.getById(brandId);
-        if(category == null) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        try {
+            var category = categoryService.getById(brandId);
+            return ResponseEntity.ok(category);
+        } catch (CategoryNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
-        return new ResponseEntity<>(category, HttpStatus.OK);
     }
 
     @PostMapping("")
-    public ResponseEntity<String> SaveCategory(@RequestParam("image") MultipartFile image, @RequestParam("name") String name, @RequestParam("description") String description) throws IOException {
-        categoryService.saveToDB(image, name, description);
-        return ResponseEntity.ok("Category saved successfully");
+    public ResponseEntity<String> SaveCategory(@RequestParam("image") MultipartFile image, @RequestParam("name") String name, @RequestParam("description") String description) {
+        try {
+            categoryService.saveToDB(image, name, description);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Category saved successfully");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ERROR: Category not saved.");
+        }
     }
 
     @PutMapping("/{categoryId}")
-    public ResponseEntity<String> UpdateCategory(@PathVariable("categoryId") UUID categoryId, @RequestParam("image") MultipartFile image, @RequestParam("name") String name, @RequestParam("description") String description) throws IOException {
-        var category = categoryService.getById(categoryId);
-        if(category == null) {
-            return new ResponseEntity<>("ERROR: Category not found!", HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<String> UpdateCategory(@PathVariable("categoryId") UUID categoryId, @RequestParam("image") MultipartFile image, @RequestParam("name") String name, @RequestParam("description") String description) {
         try {
-            Files.delete(Path.of("src/main/resources/images/category-photos" + category.imageName()));
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+            var category = categoryService.getById(categoryId);
+
+            Files.delete(Path.of("src/main/resources/images/category-photos/" + category.imageName()));
+            String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
+            String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
+            FileUploadUtil.saveFile("category-photos", fileName, image);
+
+            categoryService.update(categoryId, new CategoryDTO(categoryId, name, description, newFileName));
+            return ResponseEntity.ok("Category successfully updated!");
+        } catch (CategoryNotFoundException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
         }
-        String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
-        String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-        FileUploadUtil.saveFile("category-photos", fileName, image);
-        categoryService.update(categoryId, new CategoryDTO(categoryId, name, description, newFileName));
-        return new ResponseEntity<>("Category successfully updated!", HttpStatus.OK);
     }
 
     @DeleteMapping("/{categoryId}")
     public ResponseEntity<String> DeleteCategory(@PathVariable("categoryId") UUID categoryId) {
-        var category = categoryService.getCategoryFromDB(categoryId);
-        if(category == null) {
-            return new ResponseEntity<>("ERROR: Category not found!", HttpStatus.NOT_FOUND);
+        try {
+            categoryService.delete(categoryId);
+            return ResponseEntity.ok("Category deleted successfully");
+        } catch (CategoryNotFoundException e) {
+            return ResponseEntity.badRequest().build();
         }
-        categoryService.delete(categoryId);
-        return new ResponseEntity<>("Category deleted successfully!", HttpStatus.OK);
     }
 }

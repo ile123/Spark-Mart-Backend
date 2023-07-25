@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -30,18 +31,19 @@ public class UserController {
                 @RequestParam(defaultValue = "") String keyword) {
         var users = userService.getAll(page, pageSize, sortBy, sortDir, userType, keyword);
         if(users.isEmpty()) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            return ResponseEntity.notFound().build();
         }
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserDTO> GetUser(@PathVariable("userId")UUID userId) {
-        var userDTO = userService.getById(userId);
-        if(userDTO == null) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        var userDTO = Optional.of(userService.getById(userId));
+        if(userDTO.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
-        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+        return userDTO.map(x-> ResponseEntity.ok(x))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /*@GetMapping("/find-by-email/{userEmail}")
@@ -56,34 +58,38 @@ public class UserController {
     @PutMapping("/update-user/{userId}")
     public ResponseEntity<String> UpdateUser(@PathVariable("userId") UUID userId, @RequestBody UserDTO userDTO) {
         if(userDTO == null) {
-            return new ResponseEntity<>("ERROR: Changes to the User could not be made!", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().build();
         }
         userService.update(userId, userDTO);
-        return new ResponseEntity<>("User was changed successfully!", HttpStatus.OK);
+        return ResponseEntity.ok("User was changed successfully!");
     }
 
     @PatchMapping("/change-password/{userId}")
     public ResponseEntity<String> ChangePassword(@PathVariable("userId") UUID userId, @RequestBody ChangePasswordDTO newPassword) {
-        var user = userService.getById(userId);
-        if(user == null) {
-            return new ResponseEntity<>("ERROR: User dose not exist!", HttpStatus.BAD_REQUEST);
+        var user = Optional.of(userService.getById(userId));
+        if(user.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
         userService.changeUserPassword(userId, newPassword.newPassword());
-        return new ResponseEntity<>("Change password success!", HttpStatus.OK);
+        return ResponseEntity.ok("User password was updated successfully.");
     }
 
     @PutMapping("/change-address/{userId}")
     public ResponseEntity<String> UpdateAddress(@PathVariable("userId") UUID userId, @RequestBody AddressDTO addressDTO) {
         if(addressDTO == null) {
-            return new ResponseEntity<>("ERROR: Changes to the Address could not be made!", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().build();
         }
         userService.updateAddress(userId, addressDTO);
-        return new ResponseEntity<>("User address changed successfully!", HttpStatus.OK);
+        return ResponseEntity.ok("User address changed successfully!");
     }
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<String> DeleteUser(@PathVariable("userId") UUID userId) {
+        var user = Optional.of(userService.getById(userId));
+        if(user.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
         userService.delete(userId);
-        return new ResponseEntity<>("User deleted successfully!", HttpStatus.OK);
+        return ResponseEntity.ok("User deleted successfully!");
     }
 }
