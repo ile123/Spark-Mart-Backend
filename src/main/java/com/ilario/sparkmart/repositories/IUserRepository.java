@@ -19,12 +19,11 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT x FROM User x WHERE x.role = :role")
     Page<User> findAllByRole(@Param("role") Role role, Pageable pageable);
-
     Optional<User> findByEmail(String email);
-
+    @Query("SELECT COUNT(x) > 0 FROM User x WHERE x.phoneNumber = :phoneNumber")
+    Boolean isPhoneNumberInUse(@Param("phoneNumber") String phoneNumber);
     @Query("SELECT COUNT(x) > 0 FROM User x WHERE x.role= 'ADMINISTRATOR'")
     Boolean doesAdministratorExist();
-
     @Query("SELECT x FROM User x WHERE (LOWER(x.firstName) LIKE %:keyword% OR LOWER(x.lastName) LIKE %:keyword% OR LOWER(x.email) LIKE %:keyword%) AND x.role = :role")
     Page<User> findAllByKeyword(@Param("role") Role role, @Param("keyword") String keyword, Pageable pageable);
 }

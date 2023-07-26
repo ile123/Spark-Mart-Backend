@@ -22,8 +22,9 @@ import java.util.Objects;
 @RequestMapping("/images")
 public class ImageController {
 
-    private Resource getResource(String imageName, String uploadDir) throws IOException {
-        File photoDir = new File(Objects.requireNonNull(FileUploadUtil.class.getResource("/")).getPath())
+    private Resource getResource(String imageName, String uploadDir) {
+        File photoDir = new File(Objects.requireNonNull(FileUploadUtil.class.getResource("/"))
+                .getPath())
                 .getParentFile()
                 .getParentFile()
                 .getParentFile();

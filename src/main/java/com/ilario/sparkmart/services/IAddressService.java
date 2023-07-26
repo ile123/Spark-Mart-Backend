@@ -6,7 +6,6 @@ import com.ilario.sparkmart.exceptions.addresses.AddressNotFoundException;
 import com.ilario.sparkmart.exceptions.addresses.AddressesNotFoundException;
 import com.ilario.sparkmart.models.Address;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
@@ -14,8 +13,8 @@ public interface IAddressService {
     AddressDTO getById(UUID id) throws AddressNotFoundException;
     void saveToDB(AddressDTO addressDTO);
     Page<AddressDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) throws AddressesNotFoundException;
-    Address getLastSavedAddress();
+    Address getLastSavedAddress() throws AddressNotFoundException;
     Address getAddressByStreetNameAndCity(String streetName, String city) throws AddressNotFoundException;
     Boolean addressExists(AddressDTO addressDTO);
-    Page<UserDTO> getAllUsersByAddress(UUID id, Pageable pageable) throws AddressNotFoundException;
+    Page<UserDTO> getAllUsersByAddress(UUID id, int page, int pageSize, String sortDir, String sortBy) throws AddressNotFoundException;
 }

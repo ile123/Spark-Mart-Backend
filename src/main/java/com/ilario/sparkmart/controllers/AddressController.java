@@ -3,7 +3,6 @@ package com.ilario.sparkmart.controllers;
 import com.ilario.sparkmart.dto.AddressDTO;
 import com.ilario.sparkmart.dto.UserDTO;
 import com.ilario.sparkmart.exceptions.addresses.AddressNotFoundException;
-import com.ilario.sparkmart.exceptions.addresses.AddressesNotFoundException;
 import com.ilario.sparkmart.services.implementations.AddressServiceImpl;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
@@ -28,12 +27,8 @@ public class AddressController {
                 @RequestParam(defaultValue = "streetAddress") String sortBy,
                 @RequestParam(defaultValue = "asc") String sortDir,
                 @RequestParam(defaultValue = "") String keyword) {
-        try {
-            var addresses = addressService.getAll(page, pageSize, sortBy, sortDir, keyword);
-            return ResponseEntity.ok(addresses);
-        } catch (AddressesNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        var addresses = addressService.getAll(page, pageSize, sortBy, sortDir, keyword);
+        return ResponseEntity.ok(addresses);
     }
 
     @GetMapping("/{addressId}")
@@ -65,11 +60,7 @@ public class AddressController {
                                               @RequestParam(defaultValue = "firstName") String sortBy,
                                               @RequestParam(defaultValue = "asc") String sortDir) {
         try {
-            Pageable pageable = PageRequest.of(
-                    page,
-                    pageSize,
-                    sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-            var users = addressService.getAllUsersByAddress(addressId, pageable);
+            var users = addressService.getAllUsersByAddress(addressId, page, pageSize, sortBy, sortDir);
             return ResponseEntity.ok(users);
         } catch (AddressNotFoundException e) {
             return ResponseEntity.notFound().build();

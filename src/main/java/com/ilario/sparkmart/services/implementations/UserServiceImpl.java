@@ -4,6 +4,7 @@ import com.ilario.sparkmart.dto.AddressDTO;
 import com.ilario.sparkmart.dto.UserDTO;
 import com.ilario.sparkmart.exceptions.addresses.AddressCouldNotBeMappedException;
 import com.ilario.sparkmart.exceptions.addresses.AddressNotFoundException;
+import com.ilario.sparkmart.exceptions.users.UserEmailAlreadyInUseException;
 import com.ilario.sparkmart.exceptions.users.UserNotFoundException;
 import com.ilario.sparkmart.mappers.UserMapper;
 import com.ilario.sparkmart.models.User;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements IUserService {
@@ -31,66 +33,49 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserDTO getUserByEmail(String email) {
-        try {
-            var user = userRepository.findByEmail(email);
-            if(user.isEmpty()) {
-                throw new UserNotFoundException("ERROR: User not found by given ID!");
-            }
-            return userMapper.toUserDTO(user.get());
-        } catch (UserNotFoundException exception) {
-            System.out.println(exception.getMessage());
-        }
-        return null;
+    public UserDTO getUserByEmail(String email) throws UserNotFoundException {
+        var user = userRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("ERROR: User by given email not found."));
+        return userMapper.toUserDTO(user);
     }
 
     @Override
-    public void updateAddress(UUID userId, AddressDTO addressDTO) {
-        try {
-            var userOptional = userRepository.findById(userId);
-            if (userOptional.isEmpty()) {
-                throw new UserNotFoundException("ERROR: User not found by given ID!");
-            }
-            if(addressDTO == null) {
-                throw new AddressCouldNotBeMappedException("ERROR: Address could not be mapped from AddressDTO");
-            }
-            var user = userOptional.get();
-            var existingAddress = addressService.getAddressByStreetNameAndCity(addressDTO.streetAddress(),
-                    addressDTO.city());
-            if(existingAddress != null) {
-                user.setAddress(existingAddress);
-                existingAddress.getUsers().add(user);
-                userRepository.save(user);
-            } else {
-                addressService.saveToDB(addressDTO);
-                var address = addressService.getLastSavedAddress();
-                user.setAddress(address);
-                address.getUsers().add(user);
-                userRepository.save(user);
-            }
-        } catch (AddressCouldNotBeMappedException | UserNotFoundException | AddressNotFoundException exception) {
-                System.out.println(exception.getMessage());
+    public void updateAddress(UUID userId, AddressDTO addressDTO) throws UserNotFoundException, AddressCouldNotBeMappedException, AddressNotFoundException {
+        var user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("ERROR: User by given ID not found."));
+        if(addressDTO == null) {
+            throw new AddressCouldNotBeMappedException("ERROR: Address could not be mapped from AddressDTO");
         }
+        var existingAddress = addressService
+                .getAddressByStreetNameAndCity(addressDTO.streetAddress(), addressDTO.city());
+        if(existingAddress != null) {
+            user.setAddress(existingAddress);
+            existingAddress.getUsers().add(user);
+        } else {
+            addressService.saveToDB(addressDTO);
+            var address = addressService.getLastSavedAddress();
+            user.setAddress(address);
+            address.getUsers().add(user);
+        }
+        userRepository.save(user);
     }
 
     @Override
     public Boolean checkIfEmailIsAlreadyUsed(String email) {
-        var existingUser = userRepository.findByEmail(email);
-        return existingUser.isPresent();
+        return userRepository
+                .findByEmail(email)
+                .isPresent();
     }
 
     @Override
-    public void changeUserPassword(UUID userId, String newPassword) {
-        try {
-            var user = userRepository.findById(userId);
-            if(user.isEmpty()) {
-                throw new UserNotFoundException("ERROR: User not found!");
-            }
-            user.get().setPassword(passwordEncoder.encode(newPassword));
-            userRepository.save(user.get());
-        } catch (UserNotFoundException exception) {
-            System.out.println(exception.getMessage());
-        }
+    public void changeUserPassword(UUID userId, String newPassword) throws UserNotFoundException {
+            var user = userRepository
+                    .findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("ERROR: User not found by given ID."));
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
     }
 
     @Override
@@ -99,78 +84,63 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserDTO getById(UUID uuid) {
-        try {
-            var user = userRepository.findById(uuid);
-            if(user.isEmpty()) {
-                throw new UserNotFoundException("ERROR: User not found by given ID!");
-            }
-            return userMapper.toUserDTO(user.get());
-        } catch (UserNotFoundException exception) {
-            System.out.println(exception.getMessage());
-        }
-        return null;
+    public UserDTO getById(UUID uuid) throws UserNotFoundException {
+        var user = userRepository
+                .findById(uuid)
+                .orElseThrow(() -> new UserNotFoundException("ERROR: User not found by given ID."));
+        return userMapper.toUserDTO(user);
     }
 
     @Override
-    public void saveToDB(UserDTO entity) {
-        userRepository.save(userMapper.toUser(entity));
+    public void saveToDB(UserDTO entity) throws UserEmailAlreadyInUseException {
+        var user = userRepository
+                .findByEmail(entity.email());
+        if(user.isEmpty()) {
+            userRepository.save(userMapper.toUser(entity));
+        } else {
+            throw new UserEmailAlreadyInUseException("ERROR: User by given email already in use.");
+        }
     }
 
     @Override
     public Page<UserDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String userType, String keyword) {
-        Pageable pageable = PageRequest.of(
+        var pageable = PageRequest.of(
                 page,
                 pageSize,
                 sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        Page<User> pageResult;
-        if(keyword.isEmpty()) {
-            pageResult = userRepository.findAllByRole(Role.valueOf(userType.toUpperCase()), pageable);
-        }
-        else {
-            pageResult = userRepository.findAllByKeyword(Role.valueOf(userType.toUpperCase()), keyword.toLowerCase(), pageable);
-        }
+        var pageResult = keyword.isEmpty() ?
+                userRepository.findAllByRole(Role.valueOf(userType.toUpperCase()), pageable) :
+                userRepository.findAllByKeyword(Role.valueOf(userType.toUpperCase()), keyword.toLowerCase(), pageable);
         var userDTOs = pageResult
                 .getContent()
                 .stream()
                 .filter(User::isEnabled)
                 .map(userMapper::toUserDTO)
-                .toList();
+                .collect(Collectors.toList());
         return new PageImpl<>(userDTOs, pageable, pageResult.getTotalElements());
     }
 
     @Override
-    public void update(UUID uuid, UserDTO entity) {
-        try {
-            var userOptional = userRepository.findById(uuid);
-            if(userOptional.isEmpty()) {
-                throw new UserNotFoundException("ERROR: User not found by given ID!");
-            }
-            var user = userOptional.get();
-            if((!Objects.equals(user.getFirstName(), entity.firstName())) && (!entity.firstName().isEmpty() && !entity.firstName().isBlank())) {
-                user.setFirstName(entity.firstName());
-            }
-            if((!Objects.equals(user.getLastName(), entity.lastName())) && (!entity.lastName().isEmpty() && !entity.lastName().isBlank())) {
-                user.setLastName(entity.lastName());
-            }
-            if((!Objects.equals(user.getPhoneNumber(), entity.phoneNumber())) && (!entity.phoneNumber().isEmpty() && !entity.phoneNumber().isBlank())) {
-                user.setPhoneNumber(entity.phoneNumber());
-            }
-            userRepository.save(user);
-        } catch (UserNotFoundException exception) {
-            System.out.println(exception.getMessage());
-        }
+    public void update(UUID uuid, UserDTO entity) throws UserNotFoundException {
+        var user = userRepository
+                .findById(uuid)
+                .orElseThrow(() -> new UserNotFoundException("ERROR: User by given ID not found."));
+        user.setFirstName(entity.firstName());
+        user.setLastName(entity.lastName());
+        user.setPhoneNumber(entity.phoneNumber());
+        userRepository.save(user);
     }
 
     @Override
-    public void delete(UUID uuid) {
-        try {
-            if(userRepository.findById(uuid).isEmpty()) {
-                throw new UserNotFoundException("ERROR: User not found by given ID!");
-            }
-            userRepository.deleteById(uuid);
-        } catch (UserNotFoundException exception) {
-            System.out.println(exception.getMessage());
+    public void delete(UUID uuid) throws UserNotFoundException {
+        var user = userRepository
+                .findById(uuid)
+                .orElseThrow(() -> new UserNotFoundException("ERROR: User by given ID not found."));
+        if(!user.getOrders().isEmpty() || !user.getWishlist().getProducts().isEmpty()) {
+            user.setDisabled(true);
+            userRepository.save(user);
+        } else {
+            userRepository.delete(user);
         }
     }
 }

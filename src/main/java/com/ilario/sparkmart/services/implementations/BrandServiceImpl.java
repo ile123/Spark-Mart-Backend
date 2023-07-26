@@ -32,11 +32,8 @@ public class BrandServiceImpl implements IBrandService {
 
     @Override
     public BrandDTO getById(UUID uuid) throws BrandNotFoundException {
-        var brand = brandRepository.findById(uuid);
-        if(brand.isEmpty()) {
-            throw new BrandNotFoundException("ERROR: Brand not found.");
-        }
-        return brandMapper.toBrandDTO(brand.get());
+        var brand = brandRepository.findById(uuid).orElseThrow(() -> new BrandNotFoundException("ERROR: Brand not found."));
+        return brandMapper.toBrandDTO(brand);
     }
 
     @Override
@@ -48,9 +45,6 @@ public class BrandServiceImpl implements IBrandService {
         var pageResult = keyword.isEmpty() ?
                 brandRepository.findAll(pageable) :
                 brandRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
-        if(pageResult.isEmpty()) {
-            throw new BrandsNotFoundException("ERROR: Brands not found.");
-        }
         var brandsDTO = pageResult
                 .getContent()
                 .stream()
@@ -61,7 +55,7 @@ public class BrandServiceImpl implements IBrandService {
     }
 
     @Override
-    public Page<DisplayBrandDTO> getAllDisplayBrands(int page, int pageSize, String sortBy, String sortDir, String keyword) throws BrandsNotFoundException {
+    public Page<DisplayBrandDTO> getAllDisplayBrands(int page, int pageSize, String sortBy, String sortDir, String keyword) {
         var pageable = PageRequest.of(
                 page,
                 pageSize,
@@ -69,9 +63,6 @@ public class BrandServiceImpl implements IBrandService {
         var pageResult = keyword.isEmpty() ?
                 brandRepository.findAll(pageable) :
                 brandRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
-        if(pageResult.isEmpty()) {
-            throw new BrandsNotFoundException("ERROR: Brands not found.");
-        }
         var brandsDTO = pageResult
                 .getContent()
                 .stream()

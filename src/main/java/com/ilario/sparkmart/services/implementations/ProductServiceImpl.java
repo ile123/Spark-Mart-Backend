@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements IProductService {
@@ -35,111 +36,92 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public ProductDTO getById(UUID uuid) {
-        try {
-            var product = productRepository.findById(uuid);
-            if(product.isEmpty()) {
-                throw new ProductNotFoundException("ERROR: Product not found by given ID!");
-            }
-            return productMapper.toProductDTO(product.get());
-        } catch (ProductNotFoundException exception) {
-            System.out.println(exception.getMessage());
-        }
-        return null;
+    public ProductDTO getById(UUID uuid) throws ProductNotFoundException {
+        var product = productRepository.findById(uuid).orElseThrow(() -> new ProductNotFoundException("ERROR: Product not found by given ID."));
+        return productMapper.toProductDTO(product);
     }
 
     @Override
     public Page<ProductDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) {
-        Pageable pageable = PageRequest.of(
+        var pageable = PageRequest.of(
                 page,
                 pageSize,
                 sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        Page<Product> pageResult;
-        if(keyword.isEmpty()) {
-            pageResult = productRepository.findAll(pageable);
-        } else {
-            pageResult = productRepository.findAllByKeyword(keyword, pageable);
-        }
+        var pageResult = keyword.isEmpty() ?
+                productRepository.findAll(pageable) :
+                productRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
         var brandsDTO = pageResult
                 .getContent()
                 .stream()
                 .filter(Product::isEnabled)
                 .map(productMapper::toProductDTO)
-                .toList();
+                .collect(Collectors.toList());
         return new PageImpl<>(brandsDTO, pageable, pageResult.getTotalElements());
     }
 
     @Override
     public Page<DisplayProductDTO> getAllDisplayProducts(int page, int pageSize, String sortBy, String sortDir, String keyword) {
-        Pageable pageable = PageRequest.of(
+        var pageable = PageRequest.of(
                 page,
                 pageSize,
                 sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        Page<Product> pageResult;
-        if(keyword.isEmpty()) {
-            pageResult = productRepository.findAll(pageable);
-        } else {
-            pageResult = productRepository.findAllByKeyword(keyword, pageable);
-        }
+        var pageResult = keyword.isEmpty() ?
+                productRepository.findAll(pageable) :
+                productRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
         var brandsDTO = pageResult
                 .getContent()
                 .stream()
                 .filter(Product::isEnabled)
                 .map(productMapper::toDisplayProductDTO)
-                .toList();
+                .collect(Collectors.toList());
         return new PageImpl<>(brandsDTO, pageable, pageResult.getTotalElements());
     }
 
     @Override
     public Page<DisplayProductDTO> getAllDisplayProductsByBrand(int page, int pageSize, String sortBy, String sortDir, String keyword, String name) {
         var brand = brandRepository.findByName(name.toLowerCase());
-        Pageable pageable = PageRequest.of(
+        var pageable = PageRequest.of(
                 page,
                 pageSize,
                 sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        Page<Product> pageResult;
-        if(keyword.isEmpty()) {
-            pageResult = productRepository.findAllByBrand(brand, pageable);
-        } else {
-            pageResult = productRepository.findAllByBrandAndKeyword(brand, keyword, pageable);
-        }
+        var pageResult = keyword.isEmpty() ?
+                productRepository.findAll(pageable) :
+                productRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
         var brandsDTO = pageResult
                 .getContent()
                 .stream()
                 .filter(Product::isEnabled)
                 .filter(x -> x.getBrand() == brand)
                 .map(productMapper::toDisplayProductDTO)
-                .toList();
+                .collect(Collectors.toList());
         return new PageImpl<>(brandsDTO, pageable, pageResult.getTotalElements());
     }
 
     @Override
     public Page<DisplayProductDTO> getAllDisplayProductsByCategory(int page, int pageSize, String sortBy, String sortDir, String keyword, String name) {
         var category = categoryRepository.findByName(name.toLowerCase());
-        Pageable pageable = PageRequest.of(
+        var pageable = PageRequest.of(
                 page,
                 pageSize,
                 sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
-        Page<Product> pageResult;
-        if(keyword.isEmpty()) {
-            pageResult = productRepository.findAllByCategory(category, pageable);
-        } else {
-            pageResult = productRepository.findAllByCategoryAndKeyword(category, keyword, pageable);
-        }
+        var pageResult = keyword.isEmpty() ?
+                productRepository.findAll(pageable) :
+                productRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
         var brandsDTO = pageResult
                 .getContent()
                 .stream()
                 .filter(Product::isEnabled)
                 .filter(x -> x.getCategory() == category)
                 .map(productMapper::toDisplayProductDTO)
-                .toList();
+                .collect(Collectors.toList());
         return new PageImpl<>(brandsDTO, pageable, pageResult.getTotalElements());
     }
 
     @Override
-    public void update(UUID uuid, ProductDTO entity) {
-        if(!productRepository.existsById(uuid)) return;
-        var product = productRepository.getReferenceById(uuid);
+    public void update(UUID uuid, ProductDTO entity) throws ProductNotFoundException {
+        var product = productRepository
+                .findById(uuid)
+                .orElseThrow(() -> new ProductNotFoundException("ERROR: Product by given ID not found,"));
         var brand = brandRepository.findByName(entity.brand());
         var category = categoryRepository.findByName(entity.category());
         brand.getProducts().add(product);
@@ -154,15 +136,17 @@ public class ProductServiceImpl implements IProductService {
         productRepository.save(product);
     }
 
-
-
     @Override
-    public void delete(UUID uuid) {
-        var product = productRepository.findById(uuid);
-        if(product.isEmpty()) {
-            return;
+    public void delete(UUID uuid) throws ProductNotFoundException {
+        var product = productRepository
+                .findById(uuid)
+                .orElseThrow(() -> new ProductNotFoundException("ERROR: Product by given ID not found."));
+        if(!product.getOrders().isEmpty() || !product.getWishlists().isEmpty()) {
+            product.setIsDisabled(true);
+            productRepository.save(product);
+        } else {
+            productRepository.delete(product);
         }
-        productRepository.delete(product.get());
     }
 
     @Override
@@ -170,28 +154,25 @@ public class ProductServiceImpl implements IProductService {
                                    String description, String shortDescription, String specifications,
                                    Double price, Integer quantity,
                                    String brand, String category) throws IOException {
-        var product = new Product();
         var brandToSave = brandRepository.findByName(brand.toLowerCase());
         var categoryToSave = categoryRepository.findByName(category.toLowerCase());
-        brandToSave.getProducts().add(product);
-        categoryToSave.getProducts().add(product);
-        product.setName(name);
-        product.setDescription(description);
-        product.setShortDescription(shortDescription);
-        product.setSpecifications(specifications);
-        product.setPrice(price);
-        product.setQuantity(quantity);
-        product.setBrand(brandToSave);
-        product.setCategory(categoryToSave);
         String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
-        product.setPicture(newFileName);
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
         FileUploadUtil.saveFile("product-photos", fileName, image);
+        var product = Product
+                .builder()
+                .name(name)
+                .description(description)
+                .shortDescription(shortDescription)
+                .specifications(specifications)
+                .price(price)
+                .quantity(quantity)
+                .brand(brandToSave)
+                .category(categoryToSave)
+                .picture(newFileName)
+                .build();
+        brandToSave.getProducts().add(product);
+        categoryToSave.getProducts().add(product);
         productRepository.save(product);
-    }
-
-    @Override
-    public Product getProductFromDB(UUID id) {
-        return productRepository.getReferenceById(id);
     }
 }
