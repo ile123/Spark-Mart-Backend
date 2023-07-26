@@ -2,6 +2,8 @@ package com.ilario.sparkmart.services.implementations;
 
 import com.ilario.sparkmart.dto.WishlistDTO;
 
+import com.ilario.sparkmart.exceptions.products.ProductNotFoundException;
+import com.ilario.sparkmart.exceptions.users.UserNotFoundException;
 import com.ilario.sparkmart.models.WishlistProduct;
 import com.ilario.sparkmart.repositories.IProductRepository;
 import com.ilario.sparkmart.repositories.IUserRepository;
@@ -26,36 +28,39 @@ public class WishlistServiceImpl implements IWishlistService {
         this.productRepository = productRepository;
     }
     @Override
-    public void saveOrRemoveProductWishlist(WishlistDTO wishlistDTO) {
-        var user = userRepository.findById(wishlistDTO.userId());
-        var product = productRepository.findById(wishlistDTO.productId());
-        if(user.isEmpty() && product.isEmpty()) {
-            return;
-        }
-        var existingWishlistProduct = wishlistProductRepository.findWishlistProductByWishlistAndProduct(user.get().getWishlist(), product.get());
-        if(existingWishlistProduct.isEmpty()) {
-            var wishListProduct = WishlistProduct
-                    .builder()
-                    .wishlist(user.get().getWishlist())
-                    .product(product.get())
+    public void saveOrRemoveProductWishlist(WishlistDTO wishlistDTO) throws UserNotFoundException, ProductNotFoundException {
+        var user = userRepository
+                .findById(wishlistDTO.userId())
+                .orElseThrow(() -> new UserNotFoundException("ERROR: User by given ID not found."));
+        var product = productRepository
+                .findById(wishlistDTO.productId())
+                .orElseThrow(() -> new ProductNotFoundException("ERROR: Product by given ID not found."));
+        var existingWishlistProduct = wishlistProductRepository.findWishlistProductByWishlistAndProduct(user.getWishlist(), product);
+        existingWishlistProduct.ifPresentOrElse(wishlistProduct -> {
+            user.getWishlist().getProducts().remove(wishlistProduct);
+            product.getWishlists().remove(wishlistProduct);
+            wishlistProductRepository.delete(wishlistProduct);
+        }, () -> {
+            var wishlistProduct = WishlistProduct.builder()
+                    .wishlist(user.getWishlist())
+                    .product(product)
                     .build();
-            user.get().getWishlist().getProducts().add(wishListProduct);
-            product.get().getWishlists().add(wishListProduct);
-            wishlistProductRepository.save(wishListProduct);
-        }
-        else {
-            user.get().getWishlist().getProducts().remove(existingWishlistProduct.get());
-            product.get().getWishlists().remove(existingWishlistProduct.get());
-            wishlistRepository.save(user.get().getWishlist());
-            productRepository.save(product.get());
-            wishlistProductRepository.delete(existingWishlistProduct.get());
-        }
+            user.getWishlist().getProducts().add(wishlistProduct);
+            product.getWishlists().add(wishlistProduct);
+            wishlistProductRepository.save(wishlistProduct);
+        });
+        wishlistRepository.save(user.getWishlist());
+        productRepository.save(product);
     }
 
     @Override
-    public Boolean checkIfWishlistWasAlreadyAdded(WishlistDTO wishlistDTO) {
-        var user = userRepository.findById(wishlistDTO.userId());
-        var product = productRepository.findById(wishlistDTO.productId());
-        return wishlistProductRepository.findWishlistProductByWishlistAndProduct(user.get().getWishlist(), product.get()).isPresent();
+    public Boolean checkIfWishlistWasAlreadyAdded(WishlistDTO wishlistDTO) throws UserNotFoundException, ProductNotFoundException {
+        var user = userRepository
+                .findById(wishlistDTO.userId())
+                .orElseThrow(() -> new UserNotFoundException("ERROR: User by given ID not found."));
+        var product = productRepository
+                .findById(wishlistDTO.productId())
+                .orElseThrow(() -> new ProductNotFoundException("ERROR: Product by given ID not found."));
+        return wishlistProductRepository.findWishlistProductByWishlistAndProduct(user.getWishlist(), product).isPresent();
     }
 }

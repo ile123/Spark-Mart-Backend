@@ -3,7 +3,6 @@ package com.ilario.sparkmart.services.implementations;
 import com.ilario.sparkmart.dto.AddressDTO;
 import com.ilario.sparkmart.dto.UserDTO;
 import com.ilario.sparkmart.exceptions.addresses.AddressNotFoundException;
-import com.ilario.sparkmart.exceptions.addresses.AddressesNotFoundException;
 import com.ilario.sparkmart.mappers.AddressMapper;
 import com.ilario.sparkmart.mappers.UserMapper;
 import com.ilario.sparkmart.models.User;
@@ -30,12 +29,12 @@ public class AddressServiceImpl implements IAddressService {
     }
 
     @Override
-    public Address getLastSavedAddress() {
+    public Address getLastSavedAddress() throws AddressNotFoundException {
         var lastAddress = addressRepository
                 .findAll()
                 .stream()
                 .max(Comparator.comparing(Address::getCreatedAt));
-        return lastAddress.orElseThrow();
+        return lastAddress.orElseThrow(() -> new AddressNotFoundException("ERROR: Address not found."));
     }
 
     @Override
@@ -55,24 +54,25 @@ public class AddressServiceImpl implements IAddressService {
     }
 
     @Override
-    public Page<UserDTO> getAllUsersByAddress(UUID id, Pageable pageable) throws AddressNotFoundException {
+    public Page<UserDTO> getAllUsersByAddress(UUID id, int page, int pageSize, String sortDir, String sortBy) throws AddressNotFoundException {
+        var pageable = PageRequest.of(
+                page,
+                pageSize,
+                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
         var address = addressRepository.findById(id)
                 .orElseThrow(() -> new AddressNotFoundException("ERROR: Address by given ID not found."));
         var users = address.getUsers()
                 .stream()
                 .filter(User::isEnabled)
                 .map(userMapper::toUserDTO)
-                .toList();
+                .collect(Collectors.toList());
         return new PageImpl<>(users, pageable, users.size());
     }
 
     @Override
     public AddressDTO getById(UUID uuid) throws AddressNotFoundException {
-        var address = addressRepository.findById(uuid);
-        if(address.isEmpty()) {
-            throw new AddressNotFoundException("ERROR: Address by given id not found.");
-        }
-        return addressMapper.toAddressDTO(address.get());
+        var address = addressRepository.findById(uuid).orElseThrow(() -> new AddressNotFoundException("ERROR: Address by given id not found."));
+        return addressMapper.toAddressDTO(address);
     }
 
     @Override
@@ -85,7 +85,7 @@ public class AddressServiceImpl implements IAddressService {
     }
 
     @Override
-    public Page<AddressDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) throws AddressesNotFoundException {
+    public Page<AddressDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword) {
         var pageable = PageRequest.of(
                 page,
                 pageSize,
@@ -93,9 +93,6 @@ public class AddressServiceImpl implements IAddressService {
         var pageResult = keyword.isEmpty() ?
                 addressRepository.findAll(pageable) :
                 addressRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
-        if(pageResult.isEmpty()) {
-            throw new AddressesNotFoundException("ERROR: Addresses not found.");
-        }
         var addressDTOs = pageResult
                 .getContent()
                 .stream()

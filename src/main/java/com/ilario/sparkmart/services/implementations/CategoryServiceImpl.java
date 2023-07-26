@@ -32,11 +32,8 @@ public class CategoryServiceImpl implements ICategoryService {
 
     @Override
     public CategoryDTO getById(UUID uuid) throws CategoryNotFoundException {
-        var category = categoryRepository.findById(uuid);
-        if(category.isEmpty()) {
-            throw new CategoryNotFoundException("ERROR: Category by given ID not found.");
-        }
-        return categoryMapper.toCategoryDTO(category.get());
+        var category = categoryRepository.findById(uuid).orElseThrow(() -> new CategoryNotFoundException("ERROR: Category by given ID not found."));
+        return categoryMapper.toCategoryDTO(category);
     }
 
     @Override
@@ -48,9 +45,6 @@ public class CategoryServiceImpl implements ICategoryService {
         var pageResult = keyword.isEmpty() ?
                 categoryRepository.findAll(pageable) :
                 categoryRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
-        if(pageResult.isEmpty()) {
-            throw new CategoriesNotFoundException("ERROR: Categories not found.");
-        }
         var categoriesDTO = pageResult
                 .getContent()
                 .stream()
@@ -61,7 +55,7 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
-    public Page<DisplayCategoryDTO> getAllCategoryDisplays(int page, int pageSize, String sortBy, String sortDir, String keyword) throws CategoriesNotFoundException {
+    public Page<DisplayCategoryDTO> getAllCategoryDisplays(int page, int pageSize, String sortBy, String sortDir, String keyword) {
         var pageable = PageRequest.of(
                 page,
                 pageSize,
@@ -69,9 +63,6 @@ public class CategoryServiceImpl implements ICategoryService {
         var pageResult = keyword.isEmpty() ?
                 categoryRepository.findAll(pageable) :
                 categoryRepository.findAllByKeyword(keyword.toLowerCase(), pageable);
-        if(pageResult.isEmpty()) {
-            throw new CategoriesNotFoundException("ERROR: Categories not found.");
-        }
         var categoriesDTO = pageResult
                 .getContent()
                 .stream()

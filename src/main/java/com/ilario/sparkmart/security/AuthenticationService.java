@@ -36,7 +36,7 @@ public class AuthenticationService {
         var existingAddress = addressRepository.findAddressByStreetAddressAndCity("", "");
         try {
             var existingUser = userRepository.findByEmail(request.email());
-            if (existingUser.isPresent()) {
+            if (existingUser.isPresent() || userRepository.isPhoneNumberInUse(request.phoneNumber())) {
                 throw  new UserEmailAlreadyInUseException("ERROR: Email already in use!");
             }
             if(existingAddress.isEmpty()) {
@@ -83,8 +83,8 @@ public class AuthenticationService {
             return new AuthenticationResponse(jwtToken);
         } catch (UserEmailAlreadyInUseException | RoleNotFoundException | AddressNotFoundException | GenderNotFoundException exception) {
             System.out.println(exception.getMessage());
+            return null;
         }
-        return null;
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
