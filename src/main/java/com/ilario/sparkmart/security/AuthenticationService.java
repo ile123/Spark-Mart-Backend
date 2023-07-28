@@ -3,6 +3,7 @@ package com.ilario.sparkmart.security;
 import com.ilario.sparkmart.exceptions.addresses.AddressNotFoundException;
 import com.ilario.sparkmart.exceptions.roles.RoleNotFoundException;
 import com.ilario.sparkmart.exceptions.users.GenderNotFoundException;
+import com.ilario.sparkmart.exceptions.users.PhoneNumberAlreadyInUseException;
 import com.ilario.sparkmart.exceptions.users.UserEmailAlreadyInUseException;
 import com.ilario.sparkmart.models.Address;
 import com.ilario.sparkmart.models.User;
@@ -34,20 +35,38 @@ public class AuthenticationService {
 
     public AuthenticationResponse register(RegisterRequest request) {
         var existingAddress = addressRepository.findAddressByStreetAddressAndCity("", "");
+        if(existingAddress.isEmpty()) {
+            var newAddress = Address.builder()
+                    .streetAddress("")
+                    .country("")
+                    .city("")
+                    .postalCode("")
+                    .province("")
+                    .build();
+            addressRepository.save(newAddress);
+        }
+        if(!userRepository.doesAdministratorExist()) {
+            var admin = User.builder()
+                    .email("admin@gmail.com")
+                    .password(passwordEncoder.encode("Admin12345678"))
+                    .firstName("Admin")
+                    .lastName("Admin")
+                    .phoneNumber("091-111-1111")
+                    .wishlist(new Wishlist())
+                    .address(existingAddress.get())
+                    .role(Role.ADMINISTRATOR)
+                    .gender(Gender.MALE)
+                    .isDisabled(false)
+                    .build();
+            userRepository.save(admin);
+        }
         try {
             var existingUser = userRepository.findByEmail(request.email());
-            if (existingUser.isPresent() || userRepository.isPhoneNumberInUse(request.phoneNumber())) {
-                throw  new UserEmailAlreadyInUseException("ERROR: Email already in use!");
+            if (existingUser.isPresent()) {
+                throw  new UserEmailAlreadyInUseException("ERROR: Email already in use.");
             }
-            if(existingAddress.isEmpty()) {
-                var newAddress = Address.builder()
-                        .streetAddress("")
-                        .country("")
-                        .city("")
-                        .postalCode("")
-                        .province("")
-                        .build();
-                addressRepository.save(newAddress);
+            if(userRepository.isPhoneNumberInUse(request.phoneNumber())) {
+                throw new PhoneNumberAlreadyInUseException("ERROR: Phone number is already in use.");
             }
             var addressOptional = addressRepository.findAddressByStreetAddressAndCity("", "");
             if(addressOptional.isEmpty()) {
@@ -84,6 +103,8 @@ public class AuthenticationService {
         } catch (UserEmailAlreadyInUseException | RoleNotFoundException | AddressNotFoundException | GenderNotFoundException exception) {
             System.out.println(exception.getMessage());
             return null;
+        } catch (PhoneNumberAlreadyInUseException e) {
+            throw new RuntimeException(e);
         }
     }
 
