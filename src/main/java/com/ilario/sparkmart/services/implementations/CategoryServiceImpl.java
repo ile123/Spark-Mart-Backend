@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -79,7 +80,9 @@ public class CategoryServiceImpl implements ICategoryService {
                 .orElseThrow(() -> new CategoryNotFoundException("ERROR: Category by given ID not found."));
         category.setName(entity.name());
         category.setDescription(entity.description());
-        category.setPicture(entity.imageName());
+        if(!entity.imageName().isEmpty()) {
+            category.setPicture(entity.imageName());
+        }
         categoryRepository.save(category);
     }
 
@@ -107,6 +110,8 @@ public class CategoryServiceImpl implements ICategoryService {
                 .name(name)
                 .description(description)
                 .picture(newFileName)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
         categoryRepository.save(category);
     }

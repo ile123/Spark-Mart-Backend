@@ -22,6 +22,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -36,17 +39,22 @@ public class AuthenticationService {
     public AuthenticationResponse register(RegisterRequest request) {
         var existingAddress = addressRepository.findAddressByStreetAddressAndCity("", "");
         if(existingAddress.isEmpty()) {
-            var newAddress = Address.builder()
+            var newAddress = Address
+                    .builder()
                     .streetAddress("")
                     .country("")
                     .city("")
                     .postalCode("")
                     .province("")
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .users(new HashSet<>())
                     .build();
             addressRepository.save(newAddress);
         }
         if(!userRepository.doesAdministratorExist()) {
-            var admin = User.builder()
+            var admin = User
+                    .builder()
                     .email("admin@gmail.com")
                     .password(passwordEncoder.encode("Admin12345678"))
                     .firstName("Admin")
@@ -57,6 +65,8 @@ public class AuthenticationService {
                     .role(Role.ADMINISTRATOR)
                     .gender(Gender.MALE)
                     .isDisabled(false)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
                     .build();
             userRepository.save(admin);
         }
@@ -83,6 +93,8 @@ public class AuthenticationService {
                     .wishlist(wishlist)
                     .address(address)
                     .isDisabled(false)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
                     .build();
             switch (request.role().toUpperCase()) {
                 case "CUSTOMER" -> user.setRole(Role.CUSTOMER);

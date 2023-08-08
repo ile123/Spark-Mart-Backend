@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -78,7 +79,9 @@ public class BrandServiceImpl implements IBrandService {
                 .findById(uuid)
                 .orElseThrow(() -> new BrandNotFoundException("Brand with the given ID not found."));
         brand.setName(entity.name());
-        brand.setPicture(entity.imageName());
+        if(!entity.imageName().isEmpty()) {
+            brand.setPicture(entity.imageName());
+        }
         brandRepository.save(brand);
     }
 
@@ -104,6 +107,8 @@ public class BrandServiceImpl implements IBrandService {
                 .builder()
                 .name(name)
                 .picture(newFileName)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
         brandRepository.save(brand);
     }
