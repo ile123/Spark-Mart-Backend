@@ -1,6 +1,7 @@
 package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.BrandDTO;
+import com.ilario.sparkmart.dto.BrandRequestDTO;
 import com.ilario.sparkmart.dto.DisplayBrandDTO;
 import com.ilario.sparkmart.exceptions.brands.BrandNotFoundException;
 import com.ilario.sparkmart.exceptions.brands.BrandsNotFoundException;
@@ -13,6 +14,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.nio.file.Files;
@@ -67,9 +69,9 @@ public class BrandController {
     }
 
     @PostMapping("")
-    public ResponseEntity<String> SaveBrand(@RequestParam("image") MultipartFile image, @RequestParam("name") String name) {
+    public ResponseEntity<String> SaveBrand(@ModelAttribute BrandRequestDTO brandRequestDTO) {
         try {
-            brandService.saveToDB(image, name);
+            brandService.saveToDB(brandRequestDTO.image(), brandRequestDTO.name());
             return ResponseEntity.status(HttpStatus.CREATED).body("Brand saved successfully");
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ERROR: Brand not saved.");
@@ -77,18 +79,16 @@ public class BrandController {
     }
 
     @PutMapping("/{brandId}")
-    public ResponseEntity<String> UpdateBrand(@PathVariable("brandId") UUID brandId,
-                                              @RequestParam("image") MultipartFile image,
-                                              @RequestParam("name") String name) {
+    public ResponseEntity<String> UpdateBrand(@PathVariable UUID brandId, @ModelAttribute BrandRequestDTO brandRequestDTO) {
         try {
-            var brand = brandService.getById(brandId);
-
-            Files.delete(Path.of("src/main/resources/images/brand-photos/" + brand.imageName()));
-            String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
-            String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-            FileUploadUtil.saveFile("brand-photos", fileName, image);
-
-            brandService.update(brandId, new BrandDTO(brandId, name, newFileName));
+            if(brandRequestDTO.image() != null) {
+                String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(brandRequestDTO.image().getOriginalFilename()));
+                String fileName = StringUtils.cleanPath(Objects.requireNonNull(brandRequestDTO.image().getOriginalFilename()));
+                FileUploadUtil.saveFile("brand-photos", fileName, brandRequestDTO.image());
+                brandService.update(brandId, new BrandDTO(brandId, brandRequestDTO.name(), newFileName));
+            } else {
+                brandService.update(brandId, new BrandDTO(brandId, brandRequestDTO.name(), ""));
+            }
             return ResponseEntity.ok("Brand successfully updated!");
         } catch (BrandNotFoundException e) {
             return ResponseEntity.badRequest().build();

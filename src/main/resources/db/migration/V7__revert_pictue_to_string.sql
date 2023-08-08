@@ -1,3 +1,0 @@
-ALTER TABLE brands MODIFY picture VARCHAR(255);
-ALTER TABLE categories MODIFY picture VARCHAR(255);
-ALTER TABLE products MODIFY picture VARCHAR(255);

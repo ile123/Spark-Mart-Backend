@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -170,6 +171,8 @@ public class ProductServiceImpl implements IProductService {
                 .brand(brandToSave)
                 .category(categoryToSave)
                 .picture(newFileName)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
         brandToSave.getProducts().add(product);
         categoryToSave.getProducts().add(product);

@@ -1,6 +1,7 @@
 package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.CategoryDTO;
+import com.ilario.sparkmart.dto.CategoryRequestDTO;
 import com.ilario.sparkmart.dto.DisplayCategoryDTO;
 import com.ilario.sparkmart.exceptions.categories.CategoriesNotFoundException;
 import com.ilario.sparkmart.exceptions.categories.CategoryNotFoundException;
@@ -67,26 +68,25 @@ public class CategoryController {
     }
 
     @PostMapping("")
-    public ResponseEntity<String> SaveCategory(@RequestParam("image") MultipartFile image, @RequestParam("name") String name, @RequestParam("description") String description) {
+    public ResponseEntity<String> SaveCategory(@ModelAttribute CategoryRequestDTO categoryRequestDTO) {
         try {
-            categoryService.saveToDB(image, name, description);
+            categoryService.saveToDB(categoryRequestDTO.image(), categoryRequestDTO.name(), categoryRequestDTO.description());
             return ResponseEntity.status(HttpStatus.CREATED).body("Category saved successfully");
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ERROR: Category not saved.");
         }
     }
-
     @PutMapping("/{categoryId}")
-    public ResponseEntity<String> UpdateCategory(@PathVariable("categoryId") UUID categoryId, @RequestParam("image") MultipartFile image, @RequestParam("name") String name, @RequestParam("description") String description) {
+    public ResponseEntity<String> UpdateCategory(@PathVariable("categoryId") UUID categoryId, @ModelAttribute CategoryRequestDTO categoryRequestDTO) {
         try {
-            var category = categoryService.getById(categoryId);
-
-            Files.delete(Path.of("src/main/resources/images/category-photos/" + category.imageName()));
-            String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
-            String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-            FileUploadUtil.saveFile("category-photos", fileName, image);
-
-            categoryService.update(categoryId, new CategoryDTO(categoryId, name, description, newFileName));
+            if(categoryRequestDTO.image() != null) {
+                String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(categoryRequestDTO.image().getOriginalFilename()));
+                String fileName = StringUtils.cleanPath(Objects.requireNonNull(categoryRequestDTO.image().getOriginalFilename()));
+                FileUploadUtil.saveFile("category-photos", fileName, categoryRequestDTO.image());
+                categoryService.update(categoryRequestDTO.id(), new CategoryDTO(categoryRequestDTO.id(), categoryRequestDTO.name(), categoryRequestDTO.description(), newFileName));
+            } else {
+                categoryService.update(categoryRequestDTO.id(), new CategoryDTO(categoryRequestDTO.id(), categoryRequestDTO.name(), categoryRequestDTO.description(), ""));
+            }
             return ResponseEntity.ok("Category successfully updated!");
         } catch (CategoryNotFoundException e) {
             return ResponseEntity.badRequest().build();

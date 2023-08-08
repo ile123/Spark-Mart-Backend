@@ -18,6 +18,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.beans.Transient;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,6 +67,8 @@ public class OrderServiceImpl implements IOrderService {
                 .orderNO("ORDER: " + (orderRepository.getTotalAmountOfOrdersByUser(user) + 1))
                 .total(total)
                 .user(user)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
         user.getOrders().add(order);
         for(var product: products) {
@@ -77,6 +80,8 @@ public class OrderServiceImpl implements IOrderService {
                     .order(order)
                     .product(product)
                     .quantity(purchaseDTO.products().get(product.getId()))
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
                     .build();
             product.getOrders().add(orderProduct);
             order.getProducts().add(orderProduct);
@@ -93,6 +98,9 @@ public class OrderServiceImpl implements IOrderService {
         switch (order.getOrderStatus()) {
             case PENDING -> order.setOrderStatus(OrderStatus.PROCESSING);
             case PROCESSING -> order.setOrderStatus(OrderStatus.SHIPPED);
+        }
+        if(order.getOrderStatus().equals(OrderStatus.SHIPPED)) {
+            order.setShippingDate(LocalDateTime.now());
         }
         orderRepository.save(order);
     }
@@ -114,6 +122,7 @@ public class OrderServiceImpl implements IOrderService {
                 .allMatch(OrderProduct::getIsDelivered);
         if (allDelivered) {
             order.setOrderStatus(OrderStatus.DELIVERED);
+            order.setArrivalDate(LocalDateTime.now());
             order.setIsComplete(true);
             orderRepository.save(order);
         }

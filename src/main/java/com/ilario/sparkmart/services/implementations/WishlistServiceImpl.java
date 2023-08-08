@@ -12,6 +12,8 @@ import com.ilario.sparkmart.repositories.IWishlistRepository;
 import com.ilario.sparkmart.services.IWishlistService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 
 @Service
 public class WishlistServiceImpl implements IWishlistService {
@@ -44,6 +46,7 @@ public class WishlistServiceImpl implements IWishlistService {
             var wishlistProduct = WishlistProduct.builder()
                     .wishlist(user.getWishlist())
                     .product(product)
+                    .createdAt(LocalDateTime.now())
                     .build();
             user.getWishlist().getProducts().add(wishlistProduct);
             product.getWishlists().add(wishlistProduct);

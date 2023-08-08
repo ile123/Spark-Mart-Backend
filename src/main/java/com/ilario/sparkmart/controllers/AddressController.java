@@ -42,7 +42,7 @@ public class AddressController {
     }
 
     @PostMapping("")
-    public ResponseEntity<String> SaveAddress(@RequestBody AddressDTO addressDTO) {
+    public ResponseEntity<String> SaveAddress(@RequestBody AddressDTO addressDTO) throws AddressNotFoundException {
         if (addressDTO == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("ERROR: Could not save address to the DB.");
         }

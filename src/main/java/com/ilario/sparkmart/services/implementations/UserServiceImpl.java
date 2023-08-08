@@ -7,7 +7,9 @@ import com.ilario.sparkmart.exceptions.addresses.AddressNotFoundException;
 import com.ilario.sparkmart.exceptions.users.UserEmailAlreadyInUseException;
 import com.ilario.sparkmart.exceptions.users.UserNotFoundException;
 import com.ilario.sparkmart.mappers.UserMapper;
+import com.ilario.sparkmart.models.Address;
 import com.ilario.sparkmart.models.User;
+import com.ilario.sparkmart.repositories.IAddressRepository;
 import com.ilario.sparkmart.security.misc.enums.Role;
 import org.springframework.data.domain.*;
 import com.ilario.sparkmart.repositories.IUserRepository;
@@ -15,6 +17,7 @@ import com.ilario.sparkmart.services.IUserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,12 +25,14 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
+    private final IAddressRepository addressRepository;
     private final AddressServiceImpl addressService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper = new UserMapper();
 
-    public UserServiceImpl(IUserRepository userRepository, AddressServiceImpl addressService, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(IUserRepository userRepository, IAddressRepository addressRepository, AddressServiceImpl addressService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.addressRepository = addressRepository;
         this.addressService = addressService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -50,16 +55,27 @@ public class UserServiceImpl implements IUserService {
         }
         var existingAddress = addressService
                 .getAddressByStreetNameAndCity(addressDTO.streetAddress(), addressDTO.city());
-        if(existingAddress != null) {
-            user.setAddress(existingAddress);
-            existingAddress.getUsers().add(user);
+        if(existingAddress.isPresent()) {
+            user.setAddress(existingAddress.get());
+            existingAddress.get().getUsers().add(user);
+            userRepository.save(user);
         } else {
-            addressService.saveToDB(addressDTO);
-            var address = addressService.getLastSavedAddress();
+            var address = Address
+                    .builder()
+                    .streetAddress(addressDTO.streetAddress())
+                    .postalCode(addressDTO.postalCode())
+                    .country(addressDTO.country())
+                    .city(addressDTO.city())
+                    .province(addressDTO.province())
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .users(new HashSet<>())
+                    .build();
             user.setAddress(address);
             address.getUsers().add(user);
+            addressRepository.save(address);
+            userRepository.save(user);
         }
-        userRepository.save(user);
     }
 
     @Override
@@ -96,7 +112,10 @@ public class UserServiceImpl implements IUserService {
         var user = userRepository
                 .findByEmail(entity.email());
         if(user.isEmpty()) {
-            userRepository.save(userMapper.toUser(entity));
+            var userToBeSaved = userMapper.toUser(entity);
+            userToBeSaved.setUpdatedAt(LocalDateTime.now());
+            userToBeSaved.setCreatedAt(LocalDateTime.now());
+            userRepository.save(userToBeSaved);
         } else {
             throw new UserEmailAlreadyInUseException("ERROR: User by given email already in use.");
         }

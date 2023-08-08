@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.ilario.sparkmart.models.Address;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,12 +39,8 @@ public class AddressServiceImpl implements IAddressService {
     }
 
     @Override
-    public Address getAddressByStreetNameAndCity(String streetName, String city) throws AddressNotFoundException {
-        var address = addressRepository.findAddressByStreetAddressAndCity(streetName, city);
-        if(address.isEmpty()) {
-            throw new AddressNotFoundException("ERROR: Address by given street and name not found.");
-        }
-        return address.get();
+    public Optional<Address> getAddressByStreetNameAndCity(String streetName, String city) {
+        return addressRepository.findAddressByStreetAddressAndCity(streetName, city);
     }
 
     @Override
@@ -76,8 +73,11 @@ public class AddressServiceImpl implements IAddressService {
     }
 
     @Override
-    public void saveToDB(AddressDTO addressDTO) {
+    public void saveToDB(AddressDTO addressDTO) throws AddressNotFoundException {
         var address = addressMapper.toAddress(addressDTO);
+        address.setUpdatedAt(LocalDateTime.now());
+        address.setCreatedAt(LocalDateTime.now());
+        address.setUsers(new HashSet<>());
         var existingAddress = addressRepository.findAddressByStreetAddressAndCity(address.getStreetAddress(), address.getCity());
         if(existingAddress.isEmpty()) {
             addressRepository.save(address);
