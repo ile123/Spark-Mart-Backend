@@ -22,8 +22,9 @@ public class Brand {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private String name = "";
-    private boolean isDisabled = false;
     private String picture = "";
+
+    private boolean isDisabled = false;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

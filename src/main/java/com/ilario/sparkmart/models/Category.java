@@ -23,8 +23,10 @@ public class Category {
     private UUID id;
     private String name = "";
     private String description = "";
-    private boolean isDisabled = false;
     private String picture = "";
+
+    private boolean isDisabled = false;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp

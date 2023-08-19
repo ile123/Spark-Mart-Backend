@@ -2,20 +2,16 @@ package com.ilario.sparkmart.services;
 
 import com.ilario.sparkmart.dto.DisplayProductDTO;
 import com.ilario.sparkmart.dto.ProductDTO;
+import com.ilario.sparkmart.dto.ProductRequestDTO;
 import com.ilario.sparkmart.exceptions.products.ProductNotFoundException;
-import com.ilario.sparkmart.models.Product;
 import org.springframework.data.domain.Page;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.UUID;
 
 public interface IProductService {
     ProductDTO getById(UUID id) throws ProductNotFoundException;
-    void saveToDB(MultipartFile image, String name,
-                  String description, String shortDescription, String specifications,
-                  Double price, Integer quantity,
-                  String brand, String category) throws IOException;
+    void saveToDB(ProductRequestDTO productRequestDTO) throws IOException;
     Page<ProductDTO> getAll(int page, int pageSize, String sortBy, String sortDir, String keyword);
     void update(UUID id, ProductDTO entity) throws ProductNotFoundException;
     void delete(UUID id) throws ProductNotFoundException;

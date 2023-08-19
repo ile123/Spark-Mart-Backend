@@ -4,7 +4,6 @@ import com.ilario.sparkmart.dto.BrandDTO;
 import com.ilario.sparkmart.dto.DisplayBrandDTO;
 import com.ilario.sparkmart.exceptions.brands.BrandNotFoundException;
 import com.ilario.sparkmart.exceptions.brands.BrandsNotFoundException;
-import com.ilario.sparkmart.models.Brand;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 

@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -110,6 +111,8 @@ public class CategoryServiceImpl implements ICategoryService {
                 .name(name)
                 .description(description)
                 .picture(newFileName)
+                .products(new HashSet<>())
+                .isDisabled(false)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
