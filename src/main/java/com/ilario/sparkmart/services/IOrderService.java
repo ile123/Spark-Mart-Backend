@@ -6,12 +6,9 @@ import com.ilario.sparkmart.exceptions.orderProducts.OrderProductsNotFoundExcept
 import com.ilario.sparkmart.exceptions.orders.OrderNotFoundException;
 import com.ilario.sparkmart.exceptions.products.ProductNotFoundException;
 import com.ilario.sparkmart.exceptions.users.UserNotFoundException;
-import com.ilario.sparkmart.models.Order;
-import com.ilario.sparkmart.models.OrderProduct;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface IOrderService {

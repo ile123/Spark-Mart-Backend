@@ -24,10 +24,10 @@ public class Product {
     private String name = "";
     private String description = "";
     private String shortDescription = "";
+    private String picture = "";
     @Column( columnDefinition = "json" )
     private String specifications = "{}";
     private Double price = 0.00;
-    private String picture = "";
     private Integer quantity = 0;
 
     private Boolean isDisabled = false;

@@ -2,6 +2,7 @@ package com.ilario.sparkmart.controllers;
 
 import com.ilario.sparkmart.dto.DisplayProductDTO;
 import com.ilario.sparkmart.dto.ProductDTO;
+import com.ilario.sparkmart.dto.ProductRequestDTO;
 import com.ilario.sparkmart.dto.ProductStatisticsDTO;
 import com.ilario.sparkmart.exceptions.products.ProductNotFoundException;
 import com.ilario.sparkmart.services.IOrderService;
@@ -83,11 +84,8 @@ public class ProductController {
     }
 
     @PostMapping("")
-    public ResponseEntity<String> SaveProduct(@RequestParam("image") MultipartFile image, @RequestParam("name") String name,
-                                              @RequestParam("description") String description, @RequestParam("shortDescription") String shortDescription,
-                                              @RequestParam("price") Double price, @RequestParam("quantity") Integer quantity, @RequestParam("specifications") String specifications,
-                                              @RequestParam("brand") String brand, @RequestParam("category") String category) throws IOException {
-        productService.saveToDB(image, name, description, shortDescription, specifications, price, quantity, brand, category);
+    public ResponseEntity<String> SaveProduct(@ModelAttribute ProductRequestDTO productRequestDTO) throws IOException {
+        productService.saveToDB(productRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body("Product saved successfully");
     }
 

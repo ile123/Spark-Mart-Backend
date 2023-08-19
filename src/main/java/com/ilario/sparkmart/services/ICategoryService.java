@@ -4,7 +4,6 @@ import com.ilario.sparkmart.dto.CategoryDTO;
 import com.ilario.sparkmart.dto.DisplayCategoryDTO;
 import com.ilario.sparkmart.exceptions.categories.CategoriesNotFoundException;
 import com.ilario.sparkmart.exceptions.categories.CategoryNotFoundException;
-import com.ilario.sparkmart.models.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 

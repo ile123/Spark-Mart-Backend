@@ -26,20 +26,12 @@ import java.util.UUID;
 @RequestMapping("/customer")
 public class CustomerController {
 
-    private final IUserService userService;
-    private final IProductService productService;
     private final IWishlistService wishlistService;
     private final IOrderService orderService;
-    private final IUserRepository userRepository;
-    private final OrderMapper orderMapper;
 
-    public CustomerController(IUserService userService, IProductService productService, IWishlistService wishlistService, IOrderService orderService, IUserRepository userRepository, OrderMapper orderMapper) {
-        this.userService = userService;
-        this.productService = productService;
+    public CustomerController(IWishlistService wishlistService, IOrderService orderService) {
         this.wishlistService = wishlistService;
         this.orderService = orderService;
-        this.userRepository = userRepository;
-        this.orderMapper = orderMapper;
     }
 
     @GetMapping("/orders/{userId}")

@@ -12,11 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -85,7 +82,7 @@ public class CategoryController {
                 FileUploadUtil.saveFile("category-photos", fileName, categoryRequestDTO.image());
                 categoryService.update(categoryRequestDTO.id(), new CategoryDTO(categoryRequestDTO.id(), categoryRequestDTO.name(), categoryRequestDTO.description(), newFileName));
             } else {
-                categoryService.update(categoryRequestDTO.id(), new CategoryDTO(categoryRequestDTO.id(), categoryRequestDTO.name(), categoryRequestDTO.description(), ""));
+                categoryService.update(categoryRequestDTO.id(), new CategoryDTO(categoryId, categoryRequestDTO.name(), categoryRequestDTO.description(), ""));
             }
             return ResponseEntity.ok("Category successfully updated!");
         } catch (CategoryNotFoundException e) {

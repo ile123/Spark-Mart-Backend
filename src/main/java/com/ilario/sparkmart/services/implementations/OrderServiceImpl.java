@@ -13,6 +13,7 @@ import com.ilario.sparkmart.models.OrderProduct;
 import com.ilario.sparkmart.models.Product;
 import com.ilario.sparkmart.repositories.*;
 import com.ilario.sparkmart.security.misc.enums.OrderStatus;
+import com.ilario.sparkmart.security.misc.enums.Role;
 import com.ilario.sparkmart.services.IOrderService;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -67,6 +68,12 @@ public class OrderServiceImpl implements IOrderService {
                 .orderNO("ORDER: " + (orderRepository.getTotalAmountOfOrdersByUser(user) + 1))
                 .total(total)
                 .user(user)
+                .products(new HashSet<>())
+                .isComplete(false)
+                .orderDate(LocalDateTime.now())
+                .shippingDate(LocalDateTime.now().plusDays(1))
+                .orderStatus(OrderStatus.PENDING)
+                .arrivalDate(LocalDateTime.now().plusDays(14))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -80,6 +87,8 @@ public class OrderServiceImpl implements IOrderService {
                     .order(order)
                     .product(product)
                     .quantity(purchaseDTO.products().get(product.getId()))
+                    .dateOfDelivery(LocalDateTime.now().plusDays(14))
+                    .isDelivered(false)
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
@@ -114,9 +123,6 @@ public class OrderServiceImpl implements IOrderService {
         orderProduct.setIsDelivered(true);
         orderProductRepository.save(orderProduct);
         var allOrderProducts = orderProductRepository.getAllProductsByOrder(order);
-        if(allOrderProducts.isEmpty()) {
-            throw new OrderProductsNotFoundException("ERROR: OrderProducts by given Order ID were not found.");
-        }
         var allDelivered = allOrderProducts
                 .stream()
                 .allMatch(OrderProduct::getIsDelivered);
@@ -175,8 +181,15 @@ public class OrderServiceImpl implements IOrderService {
         var product = productRepository
                 .findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("ERROR: Product by given ID not found."));
-        var totalSold = orderProductRepository.getTotalSoldFromProduct(product);
+        var allOrderProducts = orderProductRepository.getAllOrderProductsByProduct(product);
+        var allWishlistProducts = orderProductRepository.getAllWishlistProductsByProduct(product);
+        var totalNumberOfCustomers = orderProductRepository.getTotalNumberOfCustomers(Role.CUSTOMER);
+        if(allOrderProducts.isEmpty()) return new ProductStatisticsDTO(product.getQuantity(), 0, 0, allWishlistProducts.size(), totalNumberOfCustomers);
+        var totalSold = allOrderProducts
+                .stream()
+                .mapToInt(OrderProduct::getQuantity)
+                .sum();
         var totalProfit = (int)(totalSold * product.getPrice());
-        return new ProductStatisticsDTO(product.getQuantity(), totalSold, totalProfit);
+        return new ProductStatisticsDTO(product.getQuantity(), totalSold, totalProfit, allWishlistProducts.size(), totalNumberOfCustomers);
     }
 }
