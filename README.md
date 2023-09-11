@@ -18,4 +18,4 @@ Spark Mart is a webshop application specialized in selling various electronic de
 
 This is the backend part of the project.
 
-* *Made by: Ilario Batistic* *, * *Owned by: SOSS* *
+*Made by: Ilario Batistic*, *Owned by: SOSS*
