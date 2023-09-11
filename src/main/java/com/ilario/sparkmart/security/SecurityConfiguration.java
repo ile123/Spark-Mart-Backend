@@ -42,17 +42,3 @@ public class SecurityConfiguration {
         return http.build();
     }
 }
-//http
-//                .csrf()
-//                .disable()
-//                .authorizeHttpRequests()
-//                .requestMatchers("/**").permitAll()
-//                .anyRequest().authenticated()
-//                .and()
-//                .logout().permitAll()
-//                .and()
-//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                .and()
-//                .authenticationProvider(authenticationProvider).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-//        return http.build();
-//
