@@ -1,4 +1,4 @@
-# **Spark Mart: An Electronic Device E-commerce Web Application**
+# **Spark Mart: An Electronic Device E-commerce Web Application (Backend)**
 
 Spark Mart is a webshop application specialized in selling various electronic devices. It allows for the management of different brands and categories, users, orders, and products. Products are associated with brands and categories, while orders are linked to users and products. To successfully implement the backend, Java and Spring Boot are used, while TypeScript and React are employed for the frontend. The MySQL database serves as the data store.
 
