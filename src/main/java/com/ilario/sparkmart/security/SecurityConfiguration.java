@@ -1,5 +1,6 @@
 package com.ilario.sparkmart.security;
 
+import com.ilario.sparkmart.security.misc.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,12 @@ public class SecurityConfiguration {
                 .disable()
                 .authorizeHttpRequests()
                 .requestMatchers("/**").permitAll()
+                .requestMatchers("/users/**").hasRole(Role.ADMINISTRATOR.name())
+                .requestMatchers("/addresses/**").hasRole(Role.ADMINISTRATOR.name())
+                .requestMatchers("/brands/**").hasAnyRole(Role.ADMINISTRATOR.name(), Role.EMPLOYEE.name())
+                .requestMatchers("/categories/**").hasAnyRole(Role.ADMINISTRATOR.name(), Role.EMPLOYEE.name())
+                .requestMatchers("/products/**").hasAnyRole(Role.ADMINISTRATOR.name(), Role.EMPLOYEE.name())
+                .requestMatchers("/customer/**").hasAnyRole(Role.ADMINISTRATOR.name(), Role.EMPLOYEE.name(), Role.CUSTOMER.name())
                 .anyRequest().authenticated()
                 .and()
                 .logout().permitAll()
@@ -34,5 +41,18 @@ public class SecurityConfiguration {
                 .authenticationProvider(authenticationProvider).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-
 }
+//http
+//                .csrf()
+//                .disable()
+//                .authorizeHttpRequests()
+//                .requestMatchers("/**").permitAll()
+//                .anyRequest().authenticated()
+//                .and()
+//                .logout().permitAll()
+//                .and()
+//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                .and()
+//                .authenticationProvider(authenticationProvider).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+//        return http.build();
+//
