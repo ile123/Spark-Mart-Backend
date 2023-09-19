@@ -122,16 +122,24 @@ public class ProductServiceImpl implements IProductService {
         var product = productRepository
                 .findById(uuid)
                 .orElseThrow(() -> new ProductNotFoundException("ERROR: Product by given ID not found,"));
-        var brand = brandRepository.findByName(entity.brand());
-        var category = categoryRepository.findByName(entity.category());
-        brand.getProducts().add(product);
-        category.getProducts().add(product);
+        if(!entity.brand().isEmpty()) {
+            var brand = brandRepository.findByName(entity.brand());
+            brand.getProducts().add(product);
+            product.setBrand(brand);
+        }
+        if(!entity.category().isEmpty()) {
+            var category = categoryRepository.findByName(entity.category());
+            category.getProducts().add(product);
+            product.setCategory(category);
+        }
+        if(!entity.picture().isEmpty()) {
+            product.setPicture(entity.picture());
+        }
         product.setName(entity.name());
         product.setDescription(entity.description());
         product.setShortDescription(entity.shortDescription());
         product.setSpecifications(entity.specifications());
         product.setPrice(entity.price());
-        product.setPicture(entity.picture());
         product.setQuantity(entity.quantity());
         productRepository.save(product);
     }

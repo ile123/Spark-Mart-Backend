@@ -88,23 +88,40 @@ public class ProductController {
         productService.saveToDB(productRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body("Product saved successfully");
     }
-
-    @PutMapping("/{productId}")
-    public ResponseEntity<String> UpdateProduct(@PathVariable("productId") UUID productId, @RequestParam("image") MultipartFile image, @RequestParam("name") String name,
+/*
+@RequestParam("image") MultipartFile image, @RequestParam("name") String name,
                                                 @RequestParam("description") String description, @RequestParam("shortDescription") String shortDescription, @RequestParam("specifications") String specifications,
                                                 @RequestParam("price") Double price, @RequestParam("quantity") Integer quantity,
-                                                @RequestParam("brand") String brand, @RequestParam("category") String category) {
+                                                @RequestParam("brand") String brand, @RequestParam("category") String category
+* */
+    @PutMapping("/{productId}")
+    public ResponseEntity<String> UpdateProduct(@PathVariable("productId") UUID productId, @ModelAttribute ProductRequestDTO productRequestDTO) {
         try {
-            String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(image.getOriginalFilename()));
-            String fileName = StringUtils.cleanPath(Objects.requireNonNull(image.getOriginalFilename()));
-            FileUploadUtil.saveFile("product-photos", fileName, image);
-
-            productService.update(productId, new ProductDTO(
-                    productId, name,
-                    description, shortDescription,
-                    specifications, price,
-                    newFileName, quantity,
-                    brand, category));
+            var brand = productRequestDTO.brand() == null ? "" : productRequestDTO.brand();
+            var category = productRequestDTO.category() == null ? "" : productRequestDTO.category();
+            if(productRequestDTO.image() != null) {
+                String newFileName = FileUploadUtil.removeSpecialCharacters(Objects.requireNonNull(productRequestDTO
+                        .image()
+                        .getOriginalFilename()));
+                String fileName = StringUtils.cleanPath(Objects.requireNonNull(productRequestDTO
+                        .image()
+                        .getOriginalFilename()));
+                FileUploadUtil.saveFile("product-photos", fileName, productRequestDTO.image());
+                productService.update(productId, new ProductDTO(
+                        productRequestDTO.id(), productRequestDTO.name(),
+                        productRequestDTO.description(), productRequestDTO.shortDescription(),
+                        productRequestDTO.specifications(), productRequestDTO.price(),
+                        newFileName, productRequestDTO.quantity(),
+                        brand, category));
+            }
+            else {
+                productService.update(productId, new ProductDTO(
+                        productId, productRequestDTO.name(),
+                        productRequestDTO.description(), productRequestDTO.shortDescription(),
+                        productRequestDTO.specifications(), productRequestDTO.price(),
+                        "", productRequestDTO.quantity(),
+                        brand, category));
+            }
             return ResponseEntity.ok("Product successfully updated!");
         } catch (ProductNotFoundException | IOException e) {
             return ResponseEntity.badRequest().build();
