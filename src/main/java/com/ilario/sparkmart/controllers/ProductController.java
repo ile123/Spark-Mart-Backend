@@ -88,12 +88,7 @@ public class ProductController {
         productService.saveToDB(productRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body("Product saved successfully");
     }
-/*
-@RequestParam("image") MultipartFile image, @RequestParam("name") String name,
-                                                @RequestParam("description") String description, @RequestParam("shortDescription") String shortDescription, @RequestParam("specifications") String specifications,
-                                                @RequestParam("price") Double price, @RequestParam("quantity") Integer quantity,
-                                                @RequestParam("brand") String brand, @RequestParam("category") String category
-* */
+
     @PutMapping("/{productId}")
     public ResponseEntity<String> UpdateProduct(@PathVariable("productId") UUID productId, @ModelAttribute ProductRequestDTO productRequestDTO) {
         try {
